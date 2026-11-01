@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { chatIA } from "../services/auditoriaService.js";
 import { listarProjetos } from "../services/projetoService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import {
   Brain,
   Send,
@@ -357,6 +358,7 @@ function ChatPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <select
               value={selectedProjetoId}
               onChange={(e) => setSelectedProjetoId(e.target.value)}

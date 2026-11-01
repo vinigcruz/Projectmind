@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listarProjetos, criarProjeto, atualizarProjeto, deletarProjeto } from "../services/projetoService.js";
 import { obterMetricasProjeto } from "../services/auditoriaService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import { Brain, LayoutDashboard, User, LogOut, Plus, Sparkles, Network, BookOpen, Pencil, Trash2 } from "lucide-react";
 
 function MeusProjetosPage() {
@@ -130,6 +131,7 @@ function MeusProjetosPage() {
             </div>
 
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <button
                 onClick={() => navigate("/chat")}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm flex items-center gap-2"

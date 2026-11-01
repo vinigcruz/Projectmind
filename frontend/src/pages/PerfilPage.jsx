@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import { atualizarUsuario, excluirUsuario } from "../services/authService.js";
 import { Brain, User, LogOut, ArrowLeft, Save, Trash2, AlertTriangle, ShieldCheck, Mail, Lock } from "lucide-react";
 
@@ -120,6 +121,7 @@ function PerfilPage() {
             </div>
 
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <button
                 onClick={() => navigate("/projetos")}
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition flex items-center gap-1.5"

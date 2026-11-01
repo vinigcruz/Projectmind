@@ -16,6 +16,7 @@ import {
 } from "../services/projetoService.js";
 import { obterMetricasProjeto } from "../services/auditoriaService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import {
   Brain,
   User,
@@ -421,6 +422,7 @@ function ProjetoPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <button
                 onClick={() => navigate(`/projetos/${id}/analise`)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm"
