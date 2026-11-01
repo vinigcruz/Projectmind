@@ -39,6 +39,10 @@ public class Tarefa {
 
     // Acompanhamento de execução (base da análise de atraso e das previsões)
     private Integer percentualConcluido; // 0 a 100 (nulo = 0)
+
+    @Column(length = 20)
+    private String status; // "A Fazer", "Fazendo", "Feito"
+
     private java.time.LocalDate dataInicioReal;
     private java.time.LocalDate dataConclusaoReal;
 
@@ -67,6 +71,19 @@ public class Tarefa {
 
     public Integer getPercentualConcluido() { return percentualConcluido; }
     public void setPercentualConcluido(Integer percentualConcluido) { this.percentualConcluido = percentualConcluido; }
+
+    public String getStatus() {
+        if (status == null || status.trim().isEmpty()) {
+            if (percentualConcluido != null && percentualConcluido == 100) return "Feito";
+            if (percentualConcluido != null && percentualConcluido > 0) return "Fazendo";
+            return "A Fazer";
+        }
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public java.time.LocalDate getDataInicioReal() { return dataInicioReal; }
     public void setDataInicioReal(java.time.LocalDate dataInicioReal) { this.dataInicioReal = dataInicioReal; }

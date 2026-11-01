@@ -64,11 +64,20 @@ public class AnaliseProjetoService {
             ? feedbackIARepository.findByProjetoIdOrderByDataAnaliseDesc(pid)
             : Collections.emptyList();
 
-        List<Tarefa> tarefasHistoricas = Collections.emptyList();
+        List<Tarefa> tarefasHistoricas = new ArrayList<>();
         if (projeto.getUsuario() != null && projeto.getUsuario().getId() != null) {
             try {
-                tarefasHistoricas = tarefaRepository.findByProjetoUsuarioId(projeto.getUsuario().getId());
+                tarefasHistoricas.addAll(tarefaRepository.findByProjetoUsuarioId(projeto.getUsuario().getId()));
             } catch (Exception ignored) {}
+        }
+        Set<Long> idsHistoricos = tarefasHistoricas.stream()
+            .map(Tarefa::getId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+        for (Tarefa t : tarefas) {
+            if (t.getId() == null || !idsHistoricos.contains(t.getId())) {
+                tarefasHistoricas.add(t);
+            }
         }
 
         List<LicaoAprendida> todasLicoes = ragService.todasAsLicoes();
@@ -335,15 +344,37 @@ public class AnaliseProjetoService {
             alertas.add("O projeto tem " + diasDecorridos + " dia(s) decorrido(s) mas nenhum avanço foi registrado nas tarefas.");
         }
 
-        // 4. Calibração Histórica (Tarefas passadas do usuário)
+        // 4. Calibração Histórica (Tarefas concluídas do usuário e do projeto atual)
         List<Double> razoesDuracao = new ArrayList<>();
+        List<Tarefa> poolHistorico = new ArrayList<>();
+        Set<Long> idsVistos = new HashSet<>();
         if (tarefasHistoricasUsuario != null) {
             for (Tarefa th : tarefasHistoricasUsuario) {
-                if (th.getDataInicioReal() != null && th.getDataConclusaoReal() != null && th.getDuracaoDias() != null && th.getDuracaoDias() > 0) {
+                poolHistorico.add(th);
+                if (th.getId() != null) idsVistos.add(th.getId());
+            }
+        }
+        if (tarefas != null) {
+            for (Tarefa t : tarefas) {
+                if (t.getId() == null || !idsVistos.contains(t.getId())) {
+                    poolHistorico.add(t);
+                }
+            }
+        }
+
+        for (Tarefa th : poolHistorico) {
+            int durPlanejada = (th.getDuracaoDias() != null && th.getDuracaoDias() > 0) ? th.getDuracaoDias() : 1;
+            boolean isConcluida = (th.getPercentualConcluido() != null && th.getPercentualConcluido() >= 100)
+                || "Feito".equalsIgnoreCase(th.getStatus())
+                || th.getDataConclusaoReal() != null;
+
+            if (isConcluida) {
+                if (th.getDataInicioReal() != null && th.getDataConclusaoReal() != null) {
                     long realDias = ChronoUnit.DAYS.between(th.getDataInicioReal(), th.getDataConclusaoReal());
-                    if (realDias > 0) {
-                        razoesDuracao.add((double) realDias / (double) th.getDuracaoDias());
-                    }
+                    double diasEfetivos = realDias > 0 ? (double) realDias : (double) durPlanejada;
+                    razoesDuracao.add(diasEfetivos / (double) durPlanejada);
+                } else {
+                    razoesDuracao.add(1.0);
                 }
             }
         }
@@ -558,10 +589,14 @@ public class AnaliseProjetoService {
         if ("ATRASADO".equals(situacaoPrazo)) categoriasPrioritarias.add("Cronograma");
         if (!riscosAnalisados.isEmpty()) categoriasPrioritarias.add("Riscos");
 
-        String contextoBusca = nomeProjeto + " " + (projeto.getDescricao() != null ? projeto.getDescricao() : "")
-            + " " + tarefas.stream().map(Tarefa::getDescricao).collect(Collectors.joining(" "));
+        String descRiscos = (riscos != null)
+            ? riscos.stream().map(Risco::getDescricao).filter(Objects::nonNull).collect(Collectors.joining(" "))
+            : "";
+        String contextoBusca = nomeProjeto + " " + (projeto != null && projeto.getDescricao() != null ? projeto.getDescricao() : "")
+            + " " + tarefas.stream().map(Tarefa::getDescricao).filter(Objects::nonNull).collect(Collectors.joining(" "))
+            + " " + descRiscos;
 
-        List<LicaoAprendida> licoesRankeadas = RAGService.rankear(todasLicoes, contextoBusca, categoriasPrioritarias, 3);
+        List<LicaoAprendida> licoesRankeadas = RAGService.rankear(todasLicoes, contextoBusca, categoriasPrioritarias, 5);
         List<String> licoesDescricoes = licoesRankeadas.stream()
             .map(LicaoAprendida::getDescricaoConhecimento)
             .collect(Collectors.toList());
