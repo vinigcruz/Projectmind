@@ -176,10 +176,15 @@ function ChatPage() {
     const primeiraMensagem = !jaEnviouAntes;
 
     let textoExibicao = pergunta.trim();
-    let contextoAdicional = null;
+    const historicoRecente = mensagens
+      .slice(-4)
+      .map((m) => `${m.remetente === "usuario" ? "Usuário" : "Assistente IA"}: ${m.texto}`)
+      .join("\n\n");
+    let contextoAdicional = historicoRecente ? `Histórico recente da conversa:\n${historicoRecente}` : null;
 
     if (arquivoAnexado) {
-      contextoAdicional = `[Arquivo Anexado: ${arquivoAnexado.nome} (${arquivoAnexado.tamanho})]\n${arquivoAnexado.conteudo}`;
+      const blocoArquivo = `[Arquivo Anexado: ${arquivoAnexado.nome} (${arquivoAnexado.tamanho})]\n${arquivoAnexado.conteudo}`;
+      contextoAdicional = contextoAdicional ? `${contextoAdicional}\n\n${blocoArquivo}` : blocoArquivo;
       textoExibicao = `📎 Arquivo: ${arquivoAnexado.nome}\n\n${textoExibicao || "Por favor, analise e valide este arquivo."}`;
     }
 
@@ -455,6 +460,19 @@ function ChatPage() {
                     )}
 
                     <p className="whitespace-pre-wrap">{msg.texto}</p>
+
+                    {msg.remetente === "ia" && msg.texto?.includes("[Automação ProjectMind]:") && selectedProjetoId && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/projetos/${selectedProjetoId}`)}
+                          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Ver Tarefas Criadas no Backlog
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
