@@ -12,7 +12,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -94,17 +93,27 @@ public class DataInitializer implements CommandLineRunner {
             p2.setDataFimPlanejada(LocalDate.now().plusMonths(2));
             p2.setUsuario(user);
             projetoRepository.save(p2);
+        }
 
-            // Lições Aprendidas
-            LicaoAprendida l1 = new LicaoAprendida();
-            l1.setCategoria("Geral");
-            l1.setDescricaoConhecimento("Definir contratos de API antecipadamente reduz retrabalho entre frontend e backend em 30%.");
-            licaoAprendidaRepository.save(l1);
+        // Garante uma base inicial diversificada para o motor RAG caso haja poucas lições
+        if (licaoAprendidaRepository.count() <= 2) {
+            salvarSeNaoExistir("Geral", "Definir contratos de API antecipadamente reduz retrabalho entre frontend e backend em 30%.");
+            salvarSeNaoExistir("Riscos", "Mudanças de escopo solicitadas pelo cliente devem passar por análise de impacto no caminho crítico antes da aprovação.");
+            salvarSeNaoExistir("Cronograma", "Integrar gateways de pagamento em ambiente sandbox com antecedência evita gargalos na reta final de entrega.");
+            salvarSeNaoExistir("Cronograma", "Validações de estoque e regras de negócio críticas devem possuir testes automatizados antes da homologação.");
+            salvarSeNaoExistir("Arquitetura", "Padronizar componentes visuais da página inicial e listagens acelera o desenvolvimento das telas subsequentes.");
+            salvarSeNaoExistir("Riscos", "Validar permissões IAM antes da migração de banco evita indisponibilidade em produção.");
+        }
+    }
 
-            LicaoAprendida l2 = new LicaoAprendida();
-            l2.setCategoria("Riscos");
-            l2.setDescricaoConhecimento("Validar permissões IAM antes da migração de banco evita indisponibilidade em produção.");
-            licaoAprendidaRepository.save(l2);
+    private void salvarSeNaoExistir(String categoria, String descricao) {
+        boolean existe = licaoAprendidaRepository.findAll().stream()
+            .anyMatch(l -> descricao.equalsIgnoreCase(l.getDescricaoConhecimento()));
+        if (!existe) {
+            LicaoAprendida l = new LicaoAprendida();
+            l.setCategoria(categoria);
+            l.setDescricaoConhecimento(descricao);
+            licaoAprendidaRepository.save(l);
         }
     }
 }

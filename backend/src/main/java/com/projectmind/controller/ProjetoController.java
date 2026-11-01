@@ -1,8 +1,10 @@
 package com.projectmind.controller;
 
+import com.projectmind.domain.LicaoAprendida;
 import com.projectmind.domain.Projeto;
 import com.projectmind.domain.Risco;
 import com.projectmind.domain.Tarefa;
+import com.projectmind.service.RAGService;
 import com.projectmind.repository.ProjetoRepository;
 import com.projectmind.repository.RiscoRepository;
 import com.projectmind.repository.TarefaRepository;
@@ -24,17 +26,20 @@ public class ProjetoController {
     private final TarefaRepository tarefaRepository;
     private final UsuarioRepository usuarioRepository;
     private final RiscoRepository riscoRepository;
+    private final RAGService ragService;
 
     public ProjetoController(
         ProjetoRepository projetoRepository,
         TarefaRepository tarefaRepository,
         UsuarioRepository usuarioRepository,
-        RiscoRepository riscoRepository
+        RiscoRepository riscoRepository,
+        RAGService ragService
     ) {
         this.projetoRepository = projetoRepository;
         this.tarefaRepository = tarefaRepository;
         this.usuarioRepository = usuarioRepository;
         this.riscoRepository = riscoRepository;
+        this.ragService = ragService;
     }
 
     // GET /api/projetos - Lista os projetos do usuário logado
@@ -120,10 +125,45 @@ public class ProjetoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Projeto não encontrado"));
         }
         tarefa.setProjeto(projeto);
-        if (tarefa.getPercentualConcluido() == null) {
-            tarefa.setPercentualConcluido(0);
+
+        if (tarefa.getStatus() != null && !tarefa.getStatus().trim().isEmpty()) {
+            tarefa.setStatus(tarefa.getStatus().trim());
+            if ("Feito".equalsIgnoreCase(tarefa.getStatus())) {
+                if (tarefa.getPercentualConcluido() == null || tarefa.getPercentualConcluido() == 0) {
+                    tarefa.setPercentualConcluido(100);
+                }
+            } else if ("Fazendo".equalsIgnoreCase(tarefa.getStatus())) {
+                if (tarefa.getPercentualConcluido() == null || tarefa.getPercentualConcluido() == 0) {
+                    tarefa.setPercentualConcluido(50);
+                }
+            } else if ("A Fazer".equalsIgnoreCase(tarefa.getStatus())) {
+                tarefa.setPercentualConcluido(0);
+            }
+        } else {
+            if (tarefa.getPercentualConcluido() == null) {
+                tarefa.setPercentualConcluido(0);
+                tarefa.setStatus("A Fazer");
+            } else if (tarefa.getPercentualConcluido() == 100) {
+                tarefa.setStatus("Feito");
+            } else if (tarefa.getPercentualConcluido() > 0) {
+                tarefa.setStatus("Fazendo");
+            } else {
+                tarefa.setStatus("A Fazer");
+            }
         }
+
+        int dur = (tarefa.getDuracaoDias() != null && tarefa.getDuracaoDias() > 0) ? tarefa.getDuracaoDias() : 1;
+        if (tarefa.getPercentualConcluido() != null && tarefa.getPercentualConcluido() >= 100) {
+            if (tarefa.getDataConclusaoReal() == null) tarefa.setDataConclusaoReal(LocalDate.now());
+            if (tarefa.getDataInicioReal() == null) tarefa.setDataInicioReal(LocalDate.now().minusDays(dur));
+        } else if (tarefa.getPercentualConcluido() != null && tarefa.getPercentualConcluido() > 0) {
+            if (tarefa.getDataInicioReal() == null) tarefa.setDataInicioReal(LocalDate.now());
+        }
+
         Tarefa salva = tarefaRepository.save(tarefa);
+        if (salva.getPercentualConcluido() != null && salva.getPercentualConcluido() >= 100) {
+            try { ragService.aprenderComTarefaConcluida(projeto, salva); } catch (Exception ignored) {}
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(salva);
     }
 
@@ -148,18 +188,42 @@ public class ProjetoController {
                 tarefa.setTipoDependencia(dadosAtualizados.getTipoDependencia());
             }
 
+            // Atualização de Status explícito
+            if (dadosAtualizados.getStatus() != null && !dadosAtualizados.getStatus().trim().isEmpty()) {
+                String novoStatus = dadosAtualizados.getStatus().trim();
+                tarefa.setStatus(novoStatus);
+                if ("Feito".equalsIgnoreCase(novoStatus)) {
+                    tarefa.setPercentualConcluido(100);
+                    if (tarefa.getDataInicioReal() == null) tarefa.setDataInicioReal(LocalDate.now());
+                    if (tarefa.getDataConclusaoReal() == null) tarefa.setDataConclusaoReal(LocalDate.now());
+                } else if ("A Fazer".equalsIgnoreCase(novoStatus)) {
+                    tarefa.setPercentualConcluido(0);
+                    tarefa.setDataInicioReal(null);
+                    tarefa.setDataConclusaoReal(null);
+                } else if ("Fazendo".equalsIgnoreCase(novoStatus)) {
+                    if (tarefa.getPercentualConcluido() == null || tarefa.getPercentualConcluido() == 0 || tarefa.getPercentualConcluido() == 100) {
+                        tarefa.setPercentualConcluido(50);
+                    }
+                    if (tarefa.getDataInicioReal() == null) tarefa.setDataInicioReal(LocalDate.now());
+                    tarefa.setDataConclusaoReal(null);
+                }
+            }
+
             // Atualização de progresso e datas reais
             if (dadosAtualizados.getPercentualConcluido() != null) {
                 int pct = Math.max(0, Math.min(100, dadosAtualizados.getPercentualConcluido()));
                 tarefa.setPercentualConcluido(pct);
 
                 if (pct == 0) {
+                    tarefa.setStatus("A Fazer");
                     if (dadosAtualizados.getDataInicioReal() == null) tarefa.setDataInicioReal(null);
                     if (dadosAtualizados.getDataConclusaoReal() == null) tarefa.setDataConclusaoReal(null);
                 } else if (pct < 100) {
+                    tarefa.setStatus("Fazendo");
                     if (tarefa.getDataInicioReal() == null) tarefa.setDataInicioReal(LocalDate.now());
                     tarefa.setDataConclusaoReal(null);
                 } else { // 100%
+                    tarefa.setStatus("Feito");
                     if (tarefa.getDataInicioReal() == null) tarefa.setDataInicioReal(LocalDate.now());
                     if (tarefa.getDataConclusaoReal() == null) tarefa.setDataConclusaoReal(LocalDate.now());
                 }
@@ -171,9 +235,13 @@ public class ProjetoController {
             if (dadosAtualizados.getDataConclusaoReal() != null) {
                 tarefa.setDataConclusaoReal(dadosAtualizados.getDataConclusaoReal());
                 tarefa.setPercentualConcluido(100);
+                tarefa.setStatus("Feito");
             }
 
             Tarefa atualizada = tarefaRepository.save(tarefa);
+            if (atualizada.getPercentualConcluido() != null && atualizada.getPercentualConcluido() >= 100) {
+                try { ragService.aprenderComTarefaConcluida(atualizada.getProjeto(), atualizada); } catch (Exception ignored) {}
+            }
             return ResponseEntity.ok(atualizada);
         }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Tarefa não encontrada")));
@@ -227,7 +295,44 @@ public class ProjetoController {
         risco.setId(null);
         risco.setProjeto(projeto);
         Risco salvo = riscoRepository.save(risco);
+        try { ragService.aprenderComRisco(projeto, salvo); } catch (Exception ignored) {}
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+    }
+
+    // PUT /api/projetos/{projetoId}/riscos/{riscoId} - Atualiza um risco do projeto
+    @PutMapping("/{projetoId}/riscos/{riscoId}")
+    public ResponseEntity<?> atualizarRisco(
+            @PathVariable Long projetoId,
+            @PathVariable Long riscoId,
+            @RequestBody Risco dadosAtualizados) {
+        return riscoRepository.findById(riscoId).map(risco -> {
+            if (risco.getProjeto() != null && !risco.getProjeto().getId().equals(projetoId)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "O risco não pertence a este projeto"));
+            }
+            if (dadosAtualizados.getDescricao() != null && !dadosAtualizados.getDescricao().trim().isEmpty()) {
+                risco.setDescricao(dadosAtualizados.getDescricao().trim());
+            }
+            if (dadosAtualizados.getProbabilidade() != null) {
+                double prob = dadosAtualizados.getProbabilidade();
+                if (prob > 1.0 && prob <= 100.0) prob /= 100.0;
+                risco.setProbabilidade(Math.max(0.01, Math.min(1.0, prob)));
+            }
+            if (dadosAtualizados.getImpacto() != null && dadosAtualizados.getImpacto() >= 0) {
+                risco.setImpacto(dadosAtualizados.getImpacto());
+            }
+
+            double prob = risco.getProbabilidade() != null ? risco.getProbabilidade() : 0.5;
+            double imp = risco.getImpacto() != null ? risco.getImpacto() : 1.0;
+            double exposicao = prob * imp;
+            if (exposicao >= 3.0) risco.setNivelSeveridade("Crítico");
+            else if (exposicao >= 1.5) risco.setNivelSeveridade("Alto");
+            else if (exposicao >= 0.5) risco.setNivelSeveridade("Médio");
+            else risco.setNivelSeveridade("Baixo");
+
+            Risco salvo = riscoRepository.save(risco);
+            try { ragService.aprenderComRisco(salvo.getProjeto(), salvo); } catch (Exception ignored) {}
+            return ResponseEntity.ok(salvo);
+        }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Risco não encontrado")));
     }
 
     // DELETE /api/projetos/{projetoId}/riscos/{riscoId} - Exclui um risco do projeto
@@ -262,6 +367,34 @@ public class ProjetoController {
             return ResponseEntity.ok(salvo);
         }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Projeto não encontrado")));
+    }
+
+    // GET /api/projetos/{id}/licoes - Lista todas as lições aprendidas da base RAG
+    @GetMapping("/{id}/licoes")
+    public ResponseEntity<List<LicaoAprendida>> listarLicoes(@PathVariable Long id) {
+        return ResponseEntity.ok(ragService.todasAsLicoes());
+    }
+
+    // POST /api/projetos/{id}/licoes - Registra uma nova lição aprendida na base RAG
+    @PostMapping("/{id}/licoes")
+    public ResponseEntity<?> adicionarLicao(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String categoria = body.getOrDefault("categoria", "Geral");
+        String descricao = body.get("descricaoConhecimento");
+        if (descricao == null || descricao.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "A descrição da lição aprendida é obrigatória"));
+        }
+        LicaoAprendida salva = ragService.salvarLicao(categoria, descricao);
+        return ResponseEntity.status(HttpStatus.CREATED).body(salva);
+    }
+
+    // DELETE /api/projetos/{id}/licoes/{licaoId} - Remove uma lição aprendida
+    @DeleteMapping("/{id}/licoes/{licaoId}")
+    public ResponseEntity<?> excluirLicao(@PathVariable Long id, @PathVariable Long licaoId) {
+        boolean removida = ragService.excluirLicao(licaoId);
+        if (removida) {
+            return ResponseEntity.ok(Map.of("message", "Lição excluída com sucesso!"));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Lição não encontrada"));
     }
 
     // DELETE /api/projetos/{id} - Remove um projeto
