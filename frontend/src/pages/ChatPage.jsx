@@ -343,52 +343,52 @@ function ChatPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-      {/* Header com botões de navegação idênticos ao protótipo */}
-      <header className="bg-white border-b border-gray-200 py-4 px-6 flex-shrink-0">
-        <div className="flex items-center justify-between">
+      {/* Header Responsivo (Desktop + Mobile iPhone) */}
+      <header className="bg-white border-b border-gray-200 py-3 px-3 sm:px-6 flex-shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div
             onClick={() => navigate("/projetos")}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer group"
             title="Ir para a página inicial (Meus Projetos)"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition">
-              <Brain className="h-6 w-6 text-white" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+              <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <ThemeToggle />
             <select
               value={selectedProjetoId}
               onChange={(e) => setSelectedProjetoId(e.target.value)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 focus:outline-none max-w-[155px] sm:max-w-xs truncate"
             >
-              <option value="">Selecione um Projeto Contexto</option>
+              <option value="">Selecione um Projeto</option>
               {projetos.map((p) => (
                 <option key={p.id} value={p.id}>{p.nome}</option>
               ))}
             </select>
             <button
               onClick={() => navigate("/projetos")}
-              className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium transition"
+              className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap"
             >
-              Meus Projetos
+              Projetos
             </button>
             {selectedProjetoId && (
               <button
                 onClick={() => navigate(`/projetos/${selectedProjetoId}/analise`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap"
               >
-                Ver Análise Completa
+                Análise IA
               </button>
             )}
             <div
               onClick={() => navigate("/perfil")}
-              className="flex items-center gap-2 cursor-pointer pl-2 border-l border-gray-200 group"
-              title="Meu Perfil - Editar informações e excluir conta"
+              className="flex items-center gap-2 cursor-pointer pl-1.5 sm:pl-2 border-l border-gray-200 group"
+              title="Meu Perfil"
             >
-              <div className="w-9 h-9 bg-blue-600 group-hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition shadow-sm">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 group-hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition shadow-sm">
                 <User className="h-4 w-4" />
               </div>
             </div>
@@ -397,19 +397,37 @@ function ChatPage() {
                 logout();
                 navigate("/login");
               }}
-              className="text-gray-400 hover:text-gray-600 p-2 transition"
+              className="text-gray-400 hover:text-gray-600 p-1.5 sm:p-2 transition"
               title="Sair"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
+        </div>
+
+        {/* Barra de categorias horizontal exclusiva para Celular / iPhone */}
+        <div className="lg:hidden flex items-center gap-2 overflow-x-auto no-scrollbar pt-2.5 mt-2.5 border-t border-gray-100">
+          {sidebarButtons.map((btn) => {
+            const Icon = btn.icon;
+            return (
+              <button
+                key={btn.label}
+                type="button"
+                onClick={() => handleAbrirModalRecurso(btn)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-xs font-medium whitespace-nowrap shrink-0 active:scale-95 transition"
+              >
+                <Icon className="h-3.5 w-3.5 text-blue-600" />
+                <span>{btn.label}</span>
+              </button>
+            );
+          })}
         </div>
       </header>
 
       {/* Corpo principal dividido com a Sidebar Lateral Direita do Protótipo */}
       <div className="flex-1 flex overflow-hidden">
         <main className="flex-1 flex flex-col bg-gray-50/50">
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+          <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4">
             <div className="max-w-4xl mx-auto space-y-4">
               {mensagens.map((msg) => (
                 <div
@@ -417,7 +435,7 @@ function ChatPage() {
                   className={`flex ${msg.remetente === "usuario" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm text-sm leading-relaxed ${
+                    className={`max-w-[92%] sm:max-w-[80%] rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 shadow-sm text-sm leading-relaxed break-words ${
                       msg.remetente === "usuario"
                         ? "bg-slate-900 text-white rounded-br-none"
                         : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
@@ -455,7 +473,7 @@ function ChatPage() {
           </div>
 
           {/* Barra de Envio de Mensagem com Botão de Anexo */}
-          <div className="border-t border-gray-200 bg-white px-6 py-4">
+          <div className="border-t border-gray-200 bg-white px-3 sm:px-6 py-3 sm:py-4">
             <div className="max-w-4xl mx-auto">
               {/* Pílula de Arquivo Anexado */}
               {arquivoAnexado && (
@@ -505,7 +523,7 @@ function ChatPage() {
                 <button
                   type="submit"
                   disabled={carregando || (!pergunta.trim() && !arquivoAnexado)}
-                  className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium rounded-xl px-6 py-3 text-sm transition flex items-center justify-center shadow-sm"
+                  className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-medium rounded-xl px-4 sm:px-6 py-3 text-sm transition flex items-center justify-center shadow-sm shrink-0"
                 >
                   <Send className="h-4 w-4" />
                 </button>

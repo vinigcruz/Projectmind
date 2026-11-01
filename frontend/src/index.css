@@ -12,6 +12,8 @@ html,
 body,
 #root {
   min-height: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
@@ -20,6 +22,35 @@ body {
   background: var(--color-pm-page);
   color: #111827;
   transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Ajuste de altura dinâmica (dvh) para Safari no iPhone */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh !important;
+  }
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+}
+
+/* Evita o auto-zoom do Safari no iOS ao focar em inputs/selects e melhora responsividade mobile */
+@media (max-width: 640px) {
+  input:not([type="range"]):not([type="checkbox"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Utilitário para barra de rolagem horizontal limpa no celular */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* =========================================================

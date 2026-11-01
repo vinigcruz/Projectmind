@@ -409,31 +409,31 @@ function ProjetoPage() {
       {/* Header Fixo */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div
               onClick={() => navigate("/projetos")}
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center gap-2.5 cursor-pointer group"
               title="Ir para a página inicial"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition">
-                <Brain className="h-6 w-6 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <ThemeToggle />
               <button
                 onClick={() => navigate(`/projetos/${id}/analise`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap"
               >
-                Análise Prescritiva Completa
+                Análise IA
               </button>
               <button
                 onClick={() => navigate("/chat")}
-                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium transition"
+                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap"
               >
-                Chat com IA
+                Chat IA
               </button>
               <div
                 onClick={() => navigate("/perfil")}
@@ -548,7 +548,7 @@ function ProjetoPage() {
         </div>
 
         {/* Sistema de Abas */}
-        <div className="flex border-b border-gray-200 mb-6 gap-6 bg-white px-6 rounded-t-2xl border-x border-t pt-2">
+        <div className="flex overflow-x-auto no-scrollbar whitespace-nowrap border-b border-gray-200 mb-6 gap-4 sm:gap-6 bg-white px-3 sm:px-6 rounded-t-2xl border-x border-t pt-2">
           {[
             { id: "dashboards", label: "Dashboards", icon: LayoutDashboard },
             { id: "tarefas", label: "Tarefas", icon: ListTodo },
@@ -561,7 +561,7 @@ function ProjetoPage() {
               <button
                 key={aba.id}
                 onClick={() => setAbaAtiva(aba.id)}
-                className={`flex items-center gap-2 pb-3 pt-2 text-sm font-medium border-b-2 transition ${
+                className={`flex items-center gap-1.5 sm:gap-2 pb-3 pt-2 text-xs sm:text-sm font-medium border-b-2 transition shrink-0 ${
                   abaAtiva === aba.id
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-900"
@@ -1107,7 +1107,7 @@ function ProjetoPage() {
                           return (
                             <div
                               key={t.id || idx}
-                              className={`p-4 border rounded-xl flex items-center justify-between transition bg-white shadow-sm ${
+                              className={`p-4 border rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition bg-white shadow-sm ${
                                 isGargaloAtivo
                                   ? "border-rose-300 ring-1 ring-rose-200"
                                   : isConcluida
@@ -1213,7 +1213,7 @@ function ProjetoPage() {
                   {listaRiscos.map((r, idx) => (
                     <div
                       key={r.id || idx}
-                      className="p-4 border border-gray-200 rounded-xl flex justify-between items-center bg-white hover:border-gray-300 transition"
+                      className="p-4 border border-gray-200 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white hover:border-gray-300 transition"
                     >
                       <div>
                         <h4 className="font-bold text-gray-900 text-sm">{r.descricao}</h4>
