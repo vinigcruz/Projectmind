@@ -36,11 +36,30 @@ export async function adicionarRisco(projetoId, risco) {
   return data;
 }
 
+export async function atualizarRisco(projetoId, riscoId, dados) {
+  const { data } = await api.put(`/api/projetos/${projetoId}/riscos/${riscoId}`, dados);
+  return data;
+}
+
 export async function excluirRisco(projetoId, riscoId) {
   const { data } = await api.delete(`/api/projetos/${projetoId}/riscos/${riscoId}`);
   return data;
 }
 
+export async function listarLicoes(projetoId) {
+  const { data } = await api.get(`/api/projetos/${projetoId}/licoes`);
+  return data;
+}
+
+export async function adicionarLicao(projetoId, licao) {
+  const { data } = await api.post(`/api/projetos/${projetoId}/licoes`, licao);
+  return data;
+}
+
+export async function excluirLicao(projetoId, licaoId) {
+  const { data } = await api.delete(`/api/projetos/${projetoId}/licoes/${licaoId}`);
+  return data;
+}
 
 export async function atualizarProjeto(id, dados) {
   const { data } = await api.put(`/api/projetos/${id}`, dados);
