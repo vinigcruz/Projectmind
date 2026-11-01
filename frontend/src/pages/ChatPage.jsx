@@ -113,7 +113,7 @@ const sidebarButtons = [
     sugestoes: [
       "Quantificar probabilidade e impacto em dias",
       "Propor ações preventivas e planos de contingência",
-      "Avaliar o impacto na data final do projeto",
+      "Cadastrar estes riscos automaticamente na Matriz do Projeto",
     ],
   },
 ];
@@ -469,7 +469,7 @@ function ChatPage() {
                           className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer"
                         >
                           <CheckCircle2 className="h-4 w-4" />
-                          Ver Tarefas Criadas no Backlog
+                          Ver Tarefas e Riscos no Projeto
                         </button>
                       </div>
                     )}

@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectmind.domain.FeedbackIA;
 import com.projectmind.domain.Projeto;
+import com.projectmind.domain.Risco;
 import com.projectmind.domain.Tarefa;
 import com.projectmind.dto.AnaliseProjetoDTO;
 import com.projectmind.dto.DiagnosticoDTO;
 import com.projectmind.repository.FeedbackIARepository;
 import com.projectmind.repository.ProjetoRepository;
+import com.projectmind.repository.RiscoRepository;
 import com.projectmind.repository.TarefaRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ public class AuditoriaService {
 
     private final ProjetoRepository projetoRepository;
     private final TarefaRepository tarefaRepository;
+    private final RiscoRepository riscoRepository;
+    private final RAGService ragService;
     private final AnaliseProjetoService analiseProjetoService;
     private final FeedbackIARepository feedbackIARepository;
     private final GeminiService geminiService;
@@ -40,9 +44,16 @@ public class AuditoriaService {
         Pattern.DOTALL
     );
 
+    private static final Pattern BLOCO_RISCOS_AUTO = Pattern.compile(
+        "\\[RISCOS_AUTO_START\\](.*?)\\[RISCOS_AUTO_END\\]",
+        Pattern.DOTALL
+    );
+
     public AuditoriaService(
         ProjetoRepository projetoRepository,
         TarefaRepository tarefaRepository,
+        RiscoRepository riscoRepository,
+        RAGService ragService,
         AnaliseProjetoService analiseProjetoService,
         FeedbackIARepository feedbackIARepository,
         GeminiService geminiService,
@@ -50,6 +61,8 @@ public class AuditoriaService {
     ) {
         this.projetoRepository = projetoRepository;
         this.tarefaRepository = tarefaRepository;
+        this.riscoRepository = riscoRepository;
+        this.ragService = ragService;
         this.analiseProjetoService = analiseProjetoService;
         this.feedbackIARepository = feedbackIARepository;
         this.geminiService = geminiService;
@@ -155,23 +168,28 @@ public class AuditoriaService {
 
         String instrucaoAgenteBacklog = """
             
-            REGRA AGÊNTICA DE CRIAÇÃO AUTOMÁTICA DE TAREFAS NO BACKLOG:
+            REGRA AGÊNTICA DE CRIAÇÃO AUTOMÁTICA DE TAREFAS E RISCOS NO PROJETO:
             - Quando o usuário pedir para criar, gerar, cadastrar, montar ou adicionar as tarefas/etapas/backlog/cronograma no projeto (seja a partir de uma ideia geral como "sistema de pedidos, vendas e estoque", seja com base nas dicas que você acabou de dar na conversa, ou a partir de RF/RNF):
-              1. NÃO bloqueie e NÃO exija RF ou RNF antes de criar! Gere imediatamente de 5 a 8 tarefas técnicas completas, bem descritas e com estimativa realista de prazo em dias corridos.
-              2. Apresente as tarefas criadas de forma organizada no texto da resposta e mencione de forma consultiva ao final que, caso o usuário possua Requisitos Funcionais (RF) ou Não-Funcionais (RNF) específicos adicionais depois, ele pode enviá-los para refinar ou expandir o backlog.
-              3. OBRIGATORIAMENTE, inclua no final da resposta o bloco exato abaixo (uma linha JSON por tarefa, sem comentários dentro do bloco) para que o backend grave automaticamente as tarefas no banco de dados e no Backlog Kanban do projeto:
+              1. NÃO bloqueie e NÃO exija RF ou RNF antes de criar! Gere imediatamente de 5 a 8 tarefas técnicas completas, bem descritas e com estimativa realista de prazo em dias corridos, ALÉM de 2 a 4 riscos técnicos/operacionais realistas associados ao escopo.
+              2. Apresente as tarefas e os riscos de forma organizada no texto da resposta e mencione de forma consultiva ao final que, caso o usuário possua Requisitos Funcionais (RF) ou Não-Funcionais (RNF) específicos adicionais depois, ele pode enviá-los para refinar o projeto.
+              3. OBRIGATORIAMENTE, inclua no final da resposta os dois blocos exatos abaixo (uma linha JSON por item, sem comentários dentro dos blocos) para que o backend grave automaticamente as tarefas no Backlog Kanban e os riscos na Matriz Quantitativa e Simulação de Monte Carlo:
             [TAREFAS_AUTO_START]
             {"descricao": "Levantamento de Escopo e Modelagem do Banco de Dados", "duracaoDias": 4}
             {"descricao": "Desenvolvimento da API e Regras de Negócio", "duracaoDias": 6}
             [TAREFAS_AUTO_END]
-            - Importante: inclua o bloco [TAREFAS_AUTO_START]...[TAREFAS_AUTO_END] SOMENTE quando o usuário pedir ou concordar em criar/gerar/adicionar tarefas para o projeto. Se ele apenas fizer uma pergunta teórica, responda normalmente e ofereça criar as tarefas no backlog caso ele deseje.
+            [RISCOS_AUTO_START]
+            {"descricao": "Inconsistência de concorrência na baixa de estoque em picos de vendas", "probabilidade": 0.45, "impacto": 4}
+            {"descricao": "Atraso na homologação da integração de meios de pagamento e emissão fiscal", "probabilidade": 0.35, "impacto": 5}
+            [RISCOS_AUTO_END]
+            - Caso o usuário peça especificamente apenas para cadastrar/criar/mapear/adicionar riscos no projeto (sem pedir tarefas), inclua no final da resposta o bloco [RISCOS_AUTO_START]...[RISCOS_AUTO_END] com 3 a 5 riscos quantificados (probabilidade entre 0.10 e 0.90 e impacto em dias corridos).
+            - Importante: inclua os blocos [TAREFAS_AUTO_START] e/ou [RISCOS_AUTO_START] SOMENTE quando o usuário pedir ou concordar em criar/gerar/cadastrar tarefas ou riscos no projeto. Se ele apenas fizer uma pergunta teórica, responda normalmente e ofereça cadastrar as tarefas e riscos automaticamente caso ele deseje.
             """;
 
         String systemPrompt;
         if (primeiraMensagem) {
             systemPrompt = """
                 Você é o assistente analítico e agente inteligente de projetos da ProjectMind.
-                Você possui acesso direto aos dados matemáticos do projeto (Caminho Crítico CPM, Earned Schedule, atraso/adiantamento, riscos ponderados, histórico e previsões por Monte Carlo) e também pode criar tarefas automaticamente no Backlog do projeto quando solicitado.
+                Você possui acesso direto aos dados matemáticos do projeto (Caminho Crítico CPM, Earned Schedule, atraso/adiantamento, riscos ponderados, histórico e previsões por Monte Carlo) e também pode criar tarefas no Backlog e cadastrar riscos na Matriz de Riscos automaticamente quando solicitado.
                 Caso o usuário envie arquivos, protótipos, diagramas, documentação, cronogramas, requisitos funcionais/não-funcionais (RF/NF) ou matriz de riscos para validação, analise o conteúdo de forma técnica, crítica e construtiva, apontando coerência com os dados do projeto, gargalos potenciais, riscos não mapeados e recomendações práticas.
                 Nesta primeira mensagem da conversa, faça uma breve saudação inicial e em seguida apresente a resposta analítica precisa, profissional e orientada a dados em português.
                 """ + instrucaoAgenteBacklog;
@@ -181,7 +199,7 @@ public class AuditoriaService {
                 Esta NÃO é a primeira mensagem da conversa.
                 NÃO inclua nenhuma saudação, NÃO diga 'Olá', NÃO se apresente e NÃO repita introduções como 'Eu sou o assistente'.
                 Caso o usuário envie arquivos, protótipos, diagramas, documentação, cronogramas, requisitos funcionais/não-funcionais (RF/NF) ou matriz de riscos para validação, analise o conteúdo de forma técnica, crítica e construtiva, apontando coerência com os dados do projeto, gargalos potenciais, riscos não mapeados e recomendações práticas.
-                Vá DIRETO ao ponto da dúvida, validação ou criação de tarefas solicitada pelo usuário.
+                Vá DIRETO ao ponto da dúvida, validação ou criação de tarefas e riscos solicitada pelo usuário.
                 """ + instrucaoAgenteBacklog;
         }
 
@@ -194,25 +212,35 @@ public class AuditoriaService {
             resposta = removerSaudacoesIniciais(resposta);
         }
 
-        // Processa eventual bloco [TAREFAS_AUTO_START]...[TAREFAS_AUTO_END] para gravar no banco de dados
+        // Processa eventuais blocos [TAREFAS_AUTO_START] e [RISCOS_AUTO_START] para gravar no banco de dados
         if (resposta != null) {
-            resposta = processarCriacaoAutomaticaTarefas(projetoId, resposta);
+            resposta = processarCriacaoAutomaticaTarefasERiscos(projetoId, resposta);
         }
 
         return resposta;
     }
 
-    private String processarCriacaoAutomaticaTarefas(Long projetoId, String resposta) {
-        Matcher matcher = BLOCO_TAREFAS_AUTO.matcher(resposta);
-        if (!matcher.find()) {
+    private String processarCriacaoAutomaticaTarefasERiscos(Long projetoId, String resposta) {
+        Matcher matcherTarefas = BLOCO_TAREFAS_AUTO.matcher(resposta);
+        boolean temBlocoTarefas = matcherTarefas.find();
+        String blocoTarefasJson = temBlocoTarefas ? matcherTarefas.group(1) : null;
+
+        String respostaLimpa = temBlocoTarefas ? matcherTarefas.replaceAll("").trim() : resposta;
+
+        Matcher matcherRiscos = BLOCO_RISCOS_AUTO.matcher(respostaLimpa);
+        boolean temBlocoRiscos = matcherRiscos.find();
+        String blocoRiscosJson = temBlocoRiscos ? matcherRiscos.group(1) : null;
+
+        if (temBlocoRiscos) {
+            respostaLimpa = matcherRiscos.replaceAll("").trim();
+        }
+
+        if (!temBlocoTarefas && !temBlocoRiscos) {
             return resposta;
         }
 
-        String blocoJson = matcher.group(1);
-        String respostaLimpa = matcher.replaceAll("").trim();
-
         if (projetoId == null || objectMapper == null) {
-            return respostaLimpa + "\n\n⚠️ Para que eu salve essas tarefas automaticamente no Backlog, selecione primeiro um projeto no menu superior da tela!";
+            return respostaLimpa + "\n\n⚠️ Para que eu salve essas tarefas e riscos automaticamente no projeto, selecione primeiro um projeto no menu superior da tela!";
         }
 
         Projeto projeto = projetoRepository.findById(projetoId).orElse(null);
@@ -220,54 +248,117 @@ public class AuditoriaService {
             return respostaLimpa;
         }
 
-        List<Tarefa> existentes = tarefaRepository.findByProjetoIdOrderByIdAsc(projetoId);
-        Set<String> descricoesExistentes = existentes.stream()
-            .map(t -> t.getDescricao() != null ? t.getDescricao().trim().toLowerCase() : "")
-            .collect(Collectors.toSet());
+        int tarefasCriadas = 0;
+        if (temBlocoTarefas && blocoTarefasJson != null) {
+            List<Tarefa> existentes = tarefaRepository.findByProjetoIdOrderByIdAsc(projetoId);
+            Set<String> descricoesExistentes = existentes.stream()
+                .map(t -> t.getDescricao() != null ? t.getDescricao().trim().toLowerCase() : "")
+                .collect(Collectors.toSet());
 
-        int ordemAtual = existentes.size() + 1;
-        Long ultimaTarefaId = existentes.isEmpty() ? null : existentes.get(existentes.size() - 1).getId();
-        int criadasCount = 0;
+            int ordemAtual = existentes.size() + 1;
+            Long ultimaTarefaId = existentes.isEmpty() ? null : existentes.get(existentes.size() - 1).getId();
 
-        String[] linhas = blocoJson.split("\\r?\\n");
-        for (String linha : linhas) {
-            String l = linha.trim();
-            if (l.startsWith(",") || l.endsWith(",")) {
-                l = l.replaceAll("^,+|,+$", "").trim();
-            }
-            if (!l.startsWith("{") || !l.endsWith("}")) continue;
-
-            try {
-                JsonNode node = objectMapper.readTree(l);
-                String desc = node.has("descricao") ? node.get("descricao").asText("").trim() : "";
-                int duracao = node.has("duracaoDias") ? node.get("duracaoDias").asInt(4) : 4;
-                if (duracao <= 0) duracao = 3;
-
-                if (!desc.isEmpty() && !descricoesExistentes.contains(desc.toLowerCase())) {
-                    Tarefa nova = new Tarefa();
-                    nova.setProjeto(projeto);
-                    nova.setDescricao(desc);
-                    nova.setDuracaoDias(duracao);
-                    nova.setStatus("A Fazer");
-                    nova.setPercentualConcluido(0);
-                    nova.setTipoDependencia("TI");
-                    nova.setOrdemSequencial(ordemAtual++);
-                    if (ultimaTarefaId != null) {
-                        nova.setIdsPredecessoras(new ArrayList<>(List.of(ultimaTarefaId)));
-                    }
-
-                    Tarefa salva = tarefaRepository.save(nova);
-                    ultimaTarefaId = salva.getId();
-                    descricoesExistentes.add(desc.toLowerCase());
-                    criadasCount++;
+            String[] linhas = blocoTarefasJson.split("\\r?\\n");
+            for (String linha : linhas) {
+                String l = linha.trim();
+                if (l.startsWith(",") || l.endsWith(",")) {
+                    l = l.replaceAll("^,+|,+$", "").trim();
                 }
-            } catch (Exception ignored) {}
+                if (!l.startsWith("{") || !l.endsWith("}")) continue;
+
+                try {
+                    JsonNode node = objectMapper.readTree(l);
+                    String desc = node.has("descricao") ? node.get("descricao").asText("").trim() : "";
+                    int duracao = node.has("duracaoDias") ? node.get("duracaoDias").asInt(4) : 4;
+                    if (duracao <= 0) duracao = 3;
+
+                    if (!desc.isEmpty() && !descricoesExistentes.contains(desc.toLowerCase())) {
+                        Tarefa nova = new Tarefa();
+                        nova.setProjeto(projeto);
+                        nova.setDescricao(desc);
+                        nova.setDuracaoDias(duracao);
+                        nova.setStatus("A Fazer");
+                        nova.setPercentualConcluido(0);
+                        nova.setTipoDependencia("TI");
+                        nova.setOrdemSequencial(ordemAtual++);
+                        if (ultimaTarefaId != null) {
+                            nova.setIdsPredecessoras(new ArrayList<>(List.of(ultimaTarefaId)));
+                        }
+
+                        Tarefa salva = tarefaRepository.save(nova);
+                        ultimaTarefaId = salva.getId();
+                        descricoesExistentes.add(desc.toLowerCase());
+                        tarefasCriadas++;
+                    }
+                } catch (Exception ignored) {}
+            }
         }
 
-        if (criadasCount > 0) {
+        int riscosCriados = 0;
+        if (temBlocoRiscos && blocoRiscosJson != null && riscoRepository != null) {
+            List<Risco> riscosExistentes = riscoRepository.findByProjetoId(projetoId);
+            Set<String> descRiscosExistentes = riscosExistentes.stream()
+                .map(r -> r.getDescricao() != null ? r.getDescricao().trim().toLowerCase() : "")
+                .collect(Collectors.toSet());
+
+            String[] linhas = blocoRiscosJson.split("\\r?\\n");
+            for (String linha : linhas) {
+                String l = linha.trim();
+                if (l.startsWith(",") || l.endsWith(",")) {
+                    l = l.replaceAll("^,+|,+$", "").trim();
+                }
+                if (!l.startsWith("{") || !l.endsWith("}")) continue;
+
+                try {
+                    JsonNode node = objectMapper.readTree(l);
+                    String desc = node.has("descricao") ? node.get("descricao").asText("").trim() : "";
+                    double prob = node.has("probabilidade") ? node.get("probabilidade").asDouble(0.4) : 0.4;
+                    if (prob > 1.0) prob = prob / 100.0;
+                    prob = Math.max(0.01, Math.min(1.0, prob));
+
+                    double impacto = node.has("impacto") ? node.get("impacto").asDouble(3.0) : 3.0;
+                    if (impacto <= 0) impacto = 2.0;
+
+                    if (!desc.isEmpty() && !descRiscosExistentes.contains(desc.toLowerCase())) {
+                        double exposicao = prob * impacto;
+                        String severidade;
+                        if (exposicao >= 4.0 || (prob >= 0.6 && impacto >= 5)) severidade = "Crítico";
+                        else if (exposicao >= 2.0) severidade = "Alto";
+                        else if (exposicao >= 0.8) severidade = "Médio";
+                        else severidade = "Baixo";
+
+                        Risco novoRisco = new Risco();
+                        novoRisco.setProjeto(projeto);
+                        novoRisco.setDescricao(desc);
+                        novoRisco.setProbabilidade(prob);
+                        novoRisco.setImpacto(impacto);
+                        novoRisco.setNivelSeveridade(severidade);
+
+                        Risco salvo = riscoRepository.save(novoRisco);
+                        if (ragService != null) {
+                            ragService.aprenderComRisco(projeto, salvo);
+                        }
+                        descRiscosExistentes.add(desc.toLowerCase());
+                        riscosCriados++;
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (tarefasCriadas > 0 && riscosCriados > 0) {
+            respostaLimpa += String.format(
+                "\n\n✅ [Automação ProjectMind]: %d tarefa(s) foram cadastradas no Backlog ('A Fazer' / CPM) e %d risco(s) foram integrados à Matriz Quantitativa e Simulação de Monte Carlo do projeto \"%s\"!",
+                tarefasCriadas, riscosCriados, projeto.getNome()
+            );
+        } else if (tarefasCriadas > 0) {
             respostaLimpa += String.format(
                 "\n\n✅ [Automação ProjectMind]: %d tarefa(s) foram cadastradas automaticamente no Backlog ('A Fazer') e integradas ao Caminho Crítico (CPM) do projeto \"%s\"!",
-                criadasCount, projeto.getNome()
+                tarefasCriadas, projeto.getNome()
+            );
+        } else if (riscosCriados > 0) {
+            respostaLimpa += String.format(
+                "\n\n✅ [Automação ProjectMind]: %d risco(s) foram cadastrados automaticamente na Matriz Quantitativa e integrados à Simulação de Monte Carlo do projeto \"%s\"!",
+                riscosCriados, projeto.getNome()
             );
         }
 
