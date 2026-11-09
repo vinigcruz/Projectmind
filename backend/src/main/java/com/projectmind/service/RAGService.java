@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class RAGService {
 
     private final LicaoAprendidaRepository licaoAprendidaRepository;
+    private volatile List<LicaoAprendida> cacheLicoes = null;
 
     private static final Set<String> STOPWORDS = Set.of(
         "projeto", "projetos", "para", "com", "uma", "um", "este", "esta", "esse", "essa",
@@ -33,7 +34,12 @@ public class RAGService {
     }
 
     public List<LicaoAprendida> todasAsLicoes() {
-        return licaoAprendidaRepository.findAll();
+        List<LicaoAprendida> local = this.cacheLicoes;
+        if (local == null) {
+            local = Collections.unmodifiableList(new ArrayList<>(licaoAprendidaRepository.findAll()));
+            this.cacheLicoes = local;
+        }
+        return local;
     }
 
     public LicaoAprendida salvarLicao(String categoria, String descricao) {
@@ -41,8 +47,8 @@ public class RAGService {
         String descLimpa = descricao.trim();
         String catLimpa = (categoria != null && !categoria.trim().isEmpty()) ? categoria.trim() : "Geral";
 
-        // Evita duplicatas exatas ou quase idênticas
-        List<LicaoAprendida> existentes = licaoAprendidaRepository.findAll();
+        // Evita duplicatas exatas ou quase idênticas usando o cache em memória
+        List<LicaoAprendida> existentes = todasAsLicoes();
         String normNova = normalizarTexto(descLimpa);
         for (LicaoAprendida ex : existentes) {
             if (ex.getDescricaoConhecimento() != null && normalizarTexto(ex.getDescricaoConhecimento()).equals(normNova)) {
@@ -53,12 +59,15 @@ public class RAGService {
         LicaoAprendida nova = new LicaoAprendida();
         nova.setCategoria(catLimpa);
         nova.setDescricaoConhecimento(descLimpa);
-        return licaoAprendidaRepository.save(nova);
+        LicaoAprendida salva = licaoAprendidaRepository.save(nova);
+        this.cacheLicoes = null; // Invalida cache para recarregar na próxima leitura
+        return salva;
     }
 
     public boolean excluirLicao(Long id) {
         if (id == null || !licaoAprendidaRepository.existsById(id)) return false;
         licaoAprendidaRepository.deleteById(id);
+        this.cacheLicoes = null;
         return true;
     }
 

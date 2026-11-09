@@ -12,5 +12,4 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 ENV PORT=80
 EXPOSE 80
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-80} -jar app.jar"]
-
+ENTRYPOINT ["sh", "-c", "java -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -Xss512k -Dspring.jmx.enabled=false -Dspring.main.lazy-initialization=true -Dserver.compression.enabled=true -Dserver.compression.mime-types=application/json,text/html,text/plain -Dserver.compression.min-response-size=512 -Dserver.port=${PORT:-80} -jar app.jar"]

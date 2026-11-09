@@ -1,6 +1,7 @@
 package com.projectmind.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.util.List;
 
 @Entity
@@ -21,18 +22,20 @@ public class Tarefa {
     private String tipoDependencia; // TI, II, TT, IT
 
     @com.fasterxml.jackson.annotation.JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_projeto")
     private Projeto projeto;
 
-    @ManyToOne
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_sprint")
     private Sprint sprint;
 
     public Sprint getSprint() { return sprint; }
     public void setSprint(Sprint sprint) { this.sprint = sprint; }
 
-    @ElementCollection
+    @BatchSize(size = 100)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "dependencias_tarefas", joinColumns = @JoinColumn(name = "id_sucessora"))
     @Column(name = "id_predecessora")
     private List<Long> idsPredecessoras;

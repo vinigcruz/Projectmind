@@ -50,47 +50,65 @@ public class AnaliseProjetoService {
         return analisar(projeto);
     }
 
+    private record CacheAnalise(String assinatura, long timestamp, AnaliseProjetoDTO dto) {}
+    private final Map<Long, CacheAnalise> cachePorProjeto = new java.util.concurrent.ConcurrentHashMap<>();
+
     public AnaliseProjetoDTO analisar(Projeto projeto) {
         Long pid = projeto.getId();
-        List<Tarefa> tarefas = pid != null
-            ? tarefaRepository.findByProjetoIdOrderByIdAsc(pid)
-            : (projeto.getTarefas() != null ? projeto.getTarefas() : Collections.emptyList());
+        List<Tarefa> tarefas = (projeto.getTarefas() != null)
+            ? projeto.getTarefas()
+            : (pid != null ? tarefaRepository.findByProjetoIdOrderByIdAsc(pid) : Collections.emptyList());
 
-        List<Risco> riscos = pid != null
-            ? riscoRepository.findByProjetoId(pid)
-            : (projeto.getRiscos() != null ? projeto.getRiscos() : Collections.emptyList());
+        List<Risco> riscos = (projeto.getRiscos() != null)
+            ? projeto.getRiscos()
+            : (pid != null ? riscoRepository.findByProjetoId(pid) : Collections.emptyList());
 
-        List<FeedbackIA> analisesAnteriores = pid != null
-            ? feedbackIARepository.findByProjetoIdOrderByDataAnaliseDesc(pid)
-            : Collections.emptyList();
+        // Calcula assinatura rápida do estado atual do projeto para evitar recalcular Monte Carlo sem mudança
+        String assinatura = pid + "|" + tarefas.size() + "|" + riscos.size() + "|"
+            + tarefas.stream().map(t -> (t.getId() != null ? t.getId() : 0) + ":" + (t.getPercentualConcluido() != null ? t.getPercentualConcluido() : 0) + ":" + (t.getDuracaoDias() != null ? t.getDuracaoDias() : 0)).collect(Collectors.joining(","))
+            + "|"
+            + riscos.stream().map(r -> (r.getId() != null ? r.getId() : 0) + ":" + (r.getProbabilidade() != null ? r.getProbabilidade() : 0) + ":" + (r.getImpacto() != null ? r.getImpacto() : 0)).collect(Collectors.joining(","));
 
-        List<Tarefa> tarefasHistoricas = new ArrayList<>();
-        if (projeto.getUsuario() != null && projeto.getUsuario().getId() != null) {
-            try {
-                tarefasHistoricas.addAll(tarefaRepository.findByProjetoUsuarioId(projeto.getUsuario().getId()));
-            } catch (Exception ignored) {}
-        }
-        Set<Long> idsHistoricos = tarefasHistoricas.stream()
-            .map(Tarefa::getId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-        for (Tarefa t : tarefas) {
-            if (t.getId() == null || !idsHistoricos.contains(t.getId())) {
-                tarefasHistoricas.add(t);
+        if (pid != null) {
+            CacheAnalise cached = cachePorProjeto.get(pid);
+            if (cached != null && cached.assinatura().equals(assinatura) && (System.currentTimeMillis() - cached.timestamp() < 30_000L)) {
+                return cached.dto();
             }
+        }
+
+        List<Tarefa> tarefasHistoricas = new ArrayList<>(tarefas);
+        long concluidasNoProjeto = tarefas.stream()
+            .filter(t -> (t.getPercentualConcluido() != null && t.getPercentualConcluido() >= 100) || "Feito".equalsIgnoreCase(t.getStatus()))
+            .count();
+
+        // Só consulta tarefas de outros projetos do usuário no banco se o projeto atual tiver menos de 3 concluídas
+        if (concluidasNoProjeto < 3 && projeto.getUsuario() != null && projeto.getUsuario().getId() != null) {
+            try {
+                Set<Long> idsAtuais = tarefas.stream().map(Tarefa::getId).filter(Objects::nonNull).collect(Collectors.toSet());
+                for (Tarefa th : tarefaRepository.findByProjetoUsuarioId(projeto.getUsuario().getId())) {
+                    if (th.getId() == null || !idsAtuais.contains(th.getId())) {
+                        tarefasHistoricas.add(th);
+                    }
+                }
+            } catch (Exception ignored) {}
         }
 
         List<LicaoAprendida> todasLicoes = ragService.todasAsLicoes();
 
-        return calcular(
+        AnaliseProjetoDTO resultado = calcular(
             projeto,
             tarefas,
             riscos,
             tarefasHistoricas,
             todasLicoes,
-            analisesAnteriores,
+            Collections.emptyList(),
             LocalDate.now()
         );
+
+        if (pid != null && resultado != null) {
+            cachePorProjeto.put(pid, new CacheAnalise(assinatura, System.currentTimeMillis(), resultado));
+        }
+        return resultado;
     }
 
     /**

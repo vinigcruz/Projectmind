@@ -42,6 +42,12 @@ public class ProjetoController {
         this.ragService = ragService;
     }
 
+    @GetMapping("/ping")
+    public ResponseEntity<Map<String, String>> ping() {
+        try { usuarioRepository.count(); } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
     // GET /api/projetos - Lista os projetos do usuário logado
     @GetMapping
     public ResponseEntity<List<Projeto>> listarProjetos(

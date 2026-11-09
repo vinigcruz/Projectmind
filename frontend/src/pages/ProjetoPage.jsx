@@ -92,19 +92,22 @@ function ProjetoPage() {
   const [categoriaLicao, setCategoriaLicao] = useState("Geral");
   const [descLicao, setDescLicao] = useState("");
 
-  const carregarProjeto = async () => {
-    setCarregando(true);
+  const carregarProjeto = async (silencioso = false) => {
+    if (!silencioso && !projeto) setCarregando(true);
     try {
-      const [dadosProj, dadosMetricas, dadosLicoes] = await Promise.all([
-        obterProjeto(id),
-        obterMetricasProjeto(id).catch(() => null),
-        listarLicoes(id).catch(() => []),
-      ]);
+      // Dispara as 3 requisições em paralelo, mas libera a tela assim que obterProjeto terminar
+      const promMetricas = obterMetricasProjeto(id).catch(() => null);
+      const promLicoes = listarLicoes(id).catch(() => []);
+
+      const dadosProj = await obterProjeto(id);
       if (dadosProj && dadosProj.tarefas) {
         dadosProj.tarefas.sort((a, b) => (a.id || 0) - (b.id || 0));
       }
       setProjeto(dadosProj);
-      setMetricas(dadosMetricas);
+      setCarregando(false);
+
+      const [dadosMetricas, dadosLicoes] = await Promise.all([promMetricas, promLicoes]);
+      if (dadosMetricas) setMetricas(dadosMetricas);
       setTodasLicoes(dadosLicoes || []);
     } catch (err) {
       console.error(err);
@@ -114,7 +117,7 @@ function ProjetoPage() {
   };
 
   useEffect(() => {
-    carregarProjeto();
+    carregarProjeto(false);
   }, [id]);
 
   // Manipulação de Tarefas
@@ -134,7 +137,7 @@ function ProjetoPage() {
       setStatusTarefa("A Fazer");
       setPctTarefa(0);
       setMostrarModalTarefa(false);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao adicionar tarefa.");
@@ -163,7 +166,7 @@ function ProjetoPage() {
       });
       setMostrarModalEditar(false);
       setTarefaEditando(null);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar tarefa.");
@@ -180,12 +183,23 @@ function ProjetoPage() {
     } else if (novoStatus === "Fazendo") {
       if (novoPct === 0 || novoPct === 100) novoPct = 50;
     }
+    // Atualização otimista instantânea na interface (0ms)
+    setProjeto((prev) =>
+      prev
+        ? {
+            ...prev,
+            tarefas: (prev.tarefas || []).map((item) =>
+              item.id === t.id ? { ...item, status: novoStatus, percentualConcluido: novoPct } : item
+            ),
+          }
+        : prev
+    );
     try {
       await atualizarTarefa(id, t.id, {
         status: novoStatus,
         percentualConcluido: novoPct,
       });
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao alterar status da tarefa.");
@@ -203,7 +217,7 @@ function ProjetoPage() {
         status: novoStatus,
         percentualConcluido: pct,
       });
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar progresso da tarefa.");
@@ -217,7 +231,7 @@ function ProjetoPage() {
     if (!confirmou) return;
     try {
       await excluirTarefa(id, tarefaId);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao excluir a tarefa.");
@@ -236,7 +250,7 @@ function ProjetoPage() {
       });
       setDescRisco("");
       setMostrarModalRisco(false);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao cadastrar risco.");
@@ -263,7 +277,7 @@ function ProjetoPage() {
       });
       setMostrarModalEditarRisco(false);
       setRiscoEditando(null);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar o risco.");
@@ -275,7 +289,7 @@ function ProjetoPage() {
     if (!confirmou) return;
     try {
       await excluirRisco(id, riscoId);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao excluir o risco.");
@@ -294,7 +308,7 @@ function ProjetoPage() {
       setDescLicao("");
       setCategoriaLicao("Geral");
       setMostrarModalLicao(false);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao registrar lição aprendida.");
@@ -305,7 +319,7 @@ function ProjetoPage() {
     if (!window.confirm("Deseja remover esta lição aprendida da base de conhecimento RAG?")) return;
     try {
       await excluirLicao(id, licaoId);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao excluir lição aprendida.");
@@ -328,7 +342,7 @@ function ProjetoPage() {
         descricao: descProjetoEdit.trim(),
       });
       setMostrarModalEditarProjeto(false);
-      carregarProjeto();
+      carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar o projeto.");

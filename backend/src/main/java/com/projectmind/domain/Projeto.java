@@ -1,6 +1,7 @@
 package com.projectmind.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,18 +23,21 @@ public class Projeto {
     private LocalDate dataFimPlanejada;
 
     @com.fasterxml.jackson.annotation.JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
     @OrderBy("id ASC")
+    @BatchSize(size = 50)
     @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tarefa> tarefas;
 
+    @BatchSize(size = 50)
     @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Risco> riscos;
 
-    @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FeedbackIA> feedbacksIA;
 
     public Projeto() {}

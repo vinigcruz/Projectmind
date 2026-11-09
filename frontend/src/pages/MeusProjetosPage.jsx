@@ -22,25 +22,24 @@ function MeusProjetosPage() {
   const [nomeEdit, setNomeEdit] = useState("");
   const [descricaoEdit, setDescricaoEdit] = useState("");
 
-  const carregarProjetos = async () => {
-    setCarregando(true);
+  const carregarProjetos = async (silencioso = false) => {
+    if (!silencioso && projetos.length === 0) setCarregando(true);
     try {
       const usuarioId = user?.id || user?.userId;
       const dados = await listarProjetos(usuarioId);
       setProjetos(dados || []);
+      setCarregando(false); // Exibe os projetos imediatamente sem esperar o cálculo de todas as métricas
 
       if (dados && dados.length > 0) {
-        const promessas = dados.map((p) =>
+        dados.forEach((p) => {
           obterMetricasProjeto(p.id)
-            .then((m) => ({ id: p.id, metricas: m }))
-            .catch(() => ({ id: p.id, metricas: null }))
-        );
-        const resultados = await Promise.all(promessas);
-        const mapa = {};
-        resultados.forEach((r) => {
-          mapa[r.id] = r.metricas;
+            .then((m) => {
+              if (m) {
+                setMetricasProjetos((prev) => ({ ...prev, [p.id]: m }));
+              }
+            })
+            .catch(() => {});
         });
-        setMetricasProjetos(mapa);
       }
     } catch (err) {
       console.error(err);
