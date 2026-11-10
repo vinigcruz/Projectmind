@@ -14,16 +14,25 @@ const PerfilPage = lazy(() => import("./pages/PerfilPage.jsx"));
 
 export default function App() {
   useEffect(() => {
-    // Pré-aquece o container backend na Vercel e a conexão com o banco Neon assim que o site abre
+    // 1. Acorda o motor Java e o banco Neon no exato instante em que o site abre
     api.get("/projetos/ping").catch(() => {});
 
-    // Pré-carrega os módulos secundários em segundo plano após a renderização inicial
+    // 2. Heartbeat contínuo a cada 3 minutos para nunca deixar o motor Java hibernar enquanto a aba estiver aberta
+    const keepAliveInterval = setInterval(() => {
+      api.get("/projetos/ping").catch(() => {});
+    }, 180000);
+
+    // 3. Pré-carrega os módulos secundários em segundo plano após a renderização inicial
     const timer = setTimeout(() => {
       import("./pages/ProjetoPage.jsx").catch(() => {});
       import("./pages/ChatPage.jsx").catch(() => {});
       import("./pages/AnaliseCompletaPage.jsx").catch(() => {});
     }, 1200);
-    return () => clearTimeout(timer);
+
+    return () => {
+      clearInterval(keepAliveInterval);
+      clearTimeout(timer);
+    };
   }, []);
 
   return (

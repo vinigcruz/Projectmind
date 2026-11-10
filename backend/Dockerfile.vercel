@@ -1,15 +1,24 @@
-# Stage 1: Build Spring Boot application with Java 21
+# Stage 1: Build Spring Boot application with Java 21 and extract layers
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B && \
+    java -Djarmode=tools -jar target/*.jar extract --destination /app/extracted
 
-# Stage 2: Lightweight Java 21 Runtime for Vercel Container Runtime (Port 80 default)
+# Stage 2: Fast-boot Java 21 Runtime for Vercel Container Runtime (Port 80 default)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/extracted/ ./
+
+# Pre-build JVM Class Data Sharing (CDS) archive for instant class loading
+RUN java -XX:ArchiveClassesAtExit=app.jsa \
+    -Dspring.context.exit=onRefresh \
+    -Dspring.main.lazy-initialization=true \
+    -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration \
+    -jar app.jar || true
+
 ENV PORT=80
 EXPOSE 80
-ENTRYPOINT ["sh", "-c", "java -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -Xss512k -Dspring.jmx.enabled=false -Dspring.main.lazy-initialization=true -Dserver.compression.enabled=true -Dserver.compression.mime-types=application/json,text/html,text/plain -Dserver.compression.min-response-size=512 -Dserver.port=${PORT:-80} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -XX:SharedArchiveFile=app.jsa -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -Xss512k -Dspring.jmx.enabled=false -Dspring.main.lazy-initialization=true -Dspring.jpa.hibernate.ddl-auto=none -Dspring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access=false -Dspring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect -Dspring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults=false -Dserver.compression.enabled=true -Dserver.compression.mime-types=application/json,text/html,text/plain -Dserver.compression.min-response-size=512 -Dserver.port=${PORT:-80} -jar app.jar"]
