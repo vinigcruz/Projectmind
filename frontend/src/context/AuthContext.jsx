@@ -10,13 +10,25 @@ export function AuthProvider({ children }) {
       localStorage.removeItem("pm_token");
 
       const savedUser = sessionStorage.getItem("pm_user");
-      return savedUser ? JSON.parse(savedUser) : null;
+      if (!savedUser) return null;
+      const parsed = JSON.parse(savedUser);
+      if (!parsed || typeof parsed !== "object" || (!parsed.id && !parsed.userId && !parsed.email)) {
+        sessionStorage.removeItem("pm_user");
+        sessionStorage.removeItem("pm_token");
+        return null;
+      }
+      return parsed;
     } catch {
+      sessionStorage.removeItem("pm_user");
+      sessionStorage.removeItem("pm_token");
       return null;
     }
   });
 
   const login = (userData) => {
+    if (!userData || typeof userData !== "object" || (!userData.id && !userData.userId && !userData.email)) {
+      return;
+    }
     setUser(userData);
     try {
       sessionStorage.setItem("pm_user", JSON.stringify(userData));
@@ -60,7 +72,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         atualizarUsuarioContext,
-        isAuthenticated: !!user,
+        isAuthenticated: !!(user && typeof user === "object" && (user.id || user.userId || user.email)),
       }}
     >
       {children}

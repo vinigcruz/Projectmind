@@ -30,6 +30,10 @@ function LoginPage() {
         senha: senha,
       });
 
+      if (!dadosUsuario || typeof dadosUsuario !== "object" || (!dadosUsuario.id && !dadosUsuario.userId && !dadosUsuario.email)) {
+        setErro("O servidor está reiniciando na nuvem. Aguarde 5 segundos e clique em Entrar novamente.");
+        return;
+      }
       login(dadosUsuario);
       navigate("/projetos");
     } catch (err) {

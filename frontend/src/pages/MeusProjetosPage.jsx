@@ -27,11 +27,12 @@ function MeusProjetosPage() {
     try {
       const usuarioId = user?.id || user?.userId;
       const dados = await listarProjetos(usuarioId);
-      setProjetos(dados || []);
+      const listaSegura = Array.isArray(dados) ? dados : [];
+      setProjetos(listaSegura);
       setCarregando(false); // Exibe os projetos imediatamente sem esperar o cálculo de todas as métricas
 
-      if (dados && dados.length > 0) {
-        dados.forEach((p) => {
+      if (listaSegura.length > 0) {
+        listaSegura.forEach((p) => {
           obterMetricasProjeto(p.id)
             .then((m) => {
               if (m) {
