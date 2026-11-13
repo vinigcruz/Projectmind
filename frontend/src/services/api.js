@@ -1,16 +1,22 @@
 import axios from "axios";
 
-const rawBaseUrl =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV ? "http://localhost:8080" : "");
-
-const baseURL =
-  rawBaseUrl && !rawBaseUrl.startsWith("http")
-    ? `https://${rawBaseUrl}`
-    : rawBaseUrl;
+function resolveBaseUrl() {
+  const raw = (import.meta.env.VITE_API_BASE_URL || "").trim();
+  if (!raw) {
+    return import.meta.env.DEV ? "http://localhost:8080" : "";
+  }
+  if (raw.startsWith("http://") || raw.startsWith("https://")) {
+    return raw.replace(/\/+$/, "");
+  }
+  // No Render Blueprint, 'property: host' retorna o slug do serviço sem '.onrender.com' (ex: 'projectmind-backend-xxxx')
+  if (!raw.includes(".") && !raw.includes("localhost")) {
+    return `https://${raw}.onrender.com`;
+  }
+  return `https://${raw.replace(/\/+$/, "")}`;
+}
 
 const api = axios.create({
-  baseURL,
+  baseURL: resolveBaseUrl(),
   headers: { "Content-Type": "application/json" },
 });
 
