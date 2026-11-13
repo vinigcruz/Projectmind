@@ -12,6 +12,6 @@ jobs:
     steps:
       - name: Ping ProjectMind Java Container & Neon DB
         env:
-          BACKEND_URL: ${{ vars.RENDER_BACKEND_URL || 'https://projectmind-backend.onrender.com' }}
+          BACKEND_URL: ${{ vars.RENDER_BACKEND_URL || 'https://projectmind-backend-3332.onrender.com' }}
         run: |
           curl -s -o /dev/null -w "Status HTTP: %{http_code} | Tempo: %{time_total}s\n" "${BACKEND_URL}/api/projetos/ping"

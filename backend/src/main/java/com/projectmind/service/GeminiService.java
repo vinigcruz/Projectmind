@@ -100,6 +100,9 @@ public class GeminiService {
         if (val.equalsIgnoreCase("SUA_CHAVE_AQUI") || val.isEmpty()) {
             return "";
         }
+        if (val.startsWith("rev:")) {
+            val = new StringBuilder(val.substring(4).trim()).reverse().toString();
+        }
         return val;
     }
 

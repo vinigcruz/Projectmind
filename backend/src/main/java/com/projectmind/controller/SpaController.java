@@ -12,12 +12,9 @@ public class SpaController {
             "/cadastro",
             "/chat",
             "/projetos",
-            "/projetos/{id}",
-            "/projetos/{id}/analise",
             "/perfil"
     })
-    public String forwardSpaRoutes() {
-        return "forward:/index.html";
+    public String redirectToFrontend() {
+        return "redirect:https://projectmind-frontend.onrender.com";
     }
 }
-
