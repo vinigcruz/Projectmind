@@ -2,8 +2,8 @@ name: Keep Backend Awake (0s Cold Start)
 
 on:
   schedule:
-    # Dispara automaticamente a cada 5 minutos na nuvem do GitHub (mesmo com seu PC desligado)
-    - cron: "*/5 * * * *"
+    # Dispara automaticamente a cada 10 minutos para evitar hibernação de 15 min do Render
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping ProjectMind Java Container & Neon DB
+        env:
+          BACKEND_URL: ${{ vars.RENDER_BACKEND_URL || 'https://projectmind-backend.onrender.com' }}
         run: |
-          curl -s -o /dev/null -w "Status HTTP: %{http_code} | Tempo: %{time_total}s\n" https://projectmind-theta.vercel.app/api/projetos/ping
-
+          curl -s -o /dev/null -w "Status HTTP: %{http_code} | Tempo: %{time_total}s\n" "${BACKEND_URL}/api/projetos/ping"

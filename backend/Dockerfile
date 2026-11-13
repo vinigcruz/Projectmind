@@ -6,11 +6,10 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# Stage 2: Lightweight Java 21 Runtime (Render / Railway / Docker)
+# Stage 2: Lightweight Java 21 Runtime optimized for Render Free Tier (512MB RAM)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
-
+ENTRYPOINT ["sh", "-c", "java -Xmx350m -Xms128m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Dspring.jmx.enabled=false -Dserver.compression.enabled=true -Dserver.compression.mime-types=application/json,text/html,text/plain -Dserver.compression.min-response-size=512 -Dserver.port=${PORT:-8080} -jar app.jar"]
