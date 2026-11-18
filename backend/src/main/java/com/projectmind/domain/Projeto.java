@@ -13,6 +13,9 @@ public class Projeto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "numero_projeto")
+    private Integer numeroProjeto;
+
     @Column(nullable = false, length = 150)
     private String nome;
 
@@ -44,6 +47,9 @@ public class Projeto {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public Integer getNumeroProjeto() { return numeroProjeto; }
+    public void setNumeroProjeto(Integer numeroProjeto) { this.numeroProjeto = numeroProjeto; }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }

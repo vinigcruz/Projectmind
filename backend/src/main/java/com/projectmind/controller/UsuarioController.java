@@ -32,6 +32,8 @@ public class UsuarioController {
             response.put("userId", novoUsuario.getId());
             response.put("nome", novoUsuario.getNome());
             response.put("email", novoUsuario.getEmail());
+            response.put("role", novoUsuario.getRole());
+            response.put("isAdmin", novoUsuario.isAdmin());
             response.put("message", "Usuário cadastrado com sucesso!");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -56,6 +58,8 @@ public class UsuarioController {
             response.put("userId", usuarioLogado.getId());
             response.put("nome", usuarioLogado.getNome());
             response.put("email", usuarioLogado.getEmail());
+            response.put("role", usuarioLogado.getRole());
+            response.put("isAdmin", usuarioLogado.isAdmin());
             response.put("token", "pm-token-" + usuarioLogado.getId());
             response.put("message", "Login realizado com sucesso");
 
@@ -92,6 +96,8 @@ public class UsuarioController {
             response.put("userId", atualizado.getId());
             response.put("nome", atualizado.getNome());
             response.put("email", atualizado.getEmail());
+            response.put("role", atualizado.getRole());
+            response.put("isAdmin", atualizado.isAdmin());
             response.put("message", "Informações atualizadas com sucesso!");
 
             return ResponseEntity.ok(response);

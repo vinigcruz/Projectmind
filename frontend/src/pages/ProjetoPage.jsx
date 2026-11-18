@@ -33,6 +33,7 @@ import {
   TrendingUp,
   Clock,
   ShieldAlert,
+  ShieldCheck,
   Kanban,
   List,
   Check,
@@ -43,7 +44,7 @@ import {
 function ProjetoPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   const [projeto, setProjeto] = useState(null);
   const [metricas, setMetricas] = useState(null);
@@ -97,7 +98,7 @@ function ProjetoPage() {
     try {
       // Dispara as 3 requisições em paralelo, mas libera a tela assim que obterProjeto terminar
       const promMetricas = obterMetricasProjeto(id).catch(() => null);
-      const promLicoes = listarLicoes(id).catch(() => []);
+      const promLicoes = isAdmin ? listarLicoes(id).catch(() => []) : Promise.resolve([]);
 
       const dadosProj = await obterProjeto(id);
       if (dadosProj && dadosProj.tarefas) {
@@ -187,11 +188,11 @@ function ProjetoPage() {
     setProjeto((prev) =>
       prev
         ? {
-            ...prev,
-            tarefas: (prev.tarefas || []).map((item) =>
-              item.id === t.id ? { ...item, status: novoStatus, percentualConcluido: novoPct } : item
-            ),
-          }
+          ...prev,
+          tarefas: (prev.tarefas || []).map((item) =>
+            item.id === t.id ? { ...item, status: novoStatus, percentualConcluido: novoPct } : item
+          ),
+        }
         : prev
     );
     try {
@@ -437,6 +438,14 @@ function ProjetoPage() {
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <ThemeToggle />
+              {isAdmin && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <ShieldCheck className="h-4 w-4" /> Painel Admin
+                </button>
+              )}
               <button
                 onClick={() => navigate(`/projetos/${id}/analise`)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap"
@@ -485,7 +494,7 @@ function ProjetoPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="flex-1 min-w-[240px]">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-gray-900 leading-tight">{projeto?.nome || `Projeto #${id}`}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 leading-tight">{projeto?.numeroProjeto ? `#${projeto.numeroProjeto} ` : ""}{projeto?.nome || `Projeto #${id}`}</h2>
               {cronograma?.situacaoPrazo && (
                 <span className={`text-xs px-3 py-1 rounded-full font-bold border ${situacaoBadge}`}>
                   {cronograma.situacaoPrazo}
@@ -568,18 +577,17 @@ function ProjetoPage() {
             { id: "tarefas", label: "Tarefas", icon: ListTodo },
             { id: "riscos", label: "Riscos", icon: AlertTriangle },
             { id: "feedback", label: "IA Feedback", icon: Brain },
-            { id: "licoes", label: "Lições", icon: BookOpen },
+            ...(isAdmin ? [{ id: "licoes", label: "Lições", icon: BookOpen }] : []),
           ].map((aba) => {
             const Icon = aba.icon;
             return (
               <button
                 key={aba.id}
                 onClick={() => setAbaAtiva(aba.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 pb-3 pt-2 text-xs sm:text-sm font-medium border-b-2 transition shrink-0 ${
-                  abaAtiva === aba.id
+                className={`flex items-center gap-1.5 sm:gap-2 pb-3 pt-2 text-xs sm:text-sm font-medium border-b-2 transition shrink-0 ${abaAtiva === aba.id
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 <Icon className="h-4 w-4" />
                 {aba.label}
@@ -691,11 +699,10 @@ function ProjetoPage() {
                       {listaRiscos.map((r, idx) => (
                         <div key={r.id || idx} className="flex items-center justify-between p-2.5 bg-white border border-gray-100 rounded-lg">
                           <span className="font-medium text-gray-800 truncate max-w-[200px]">{r.descricao}</span>
-                          <span className={`px-2 py-0.5 rounded font-bold ${
-                            r.severidade === "Crítico" ? "bg-rose-100 text-rose-800" :
-                            r.severidade === "Alto" ? "bg-amber-100 text-amber-800" :
-                            r.severidade === "Médio" ? "bg-yellow-100 text-yellow-800" : "bg-emerald-100 text-emerald-800"
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded font-bold ${r.severidade === "Crítico" ? "bg-rose-100 text-rose-800" :
+                              r.severidade === "Alto" ? "bg-amber-100 text-amber-800" :
+                                r.severidade === "Médio" ? "bg-yellow-100 text-yellow-800" : "bg-emerald-100 text-emerald-800"
+                            }`}>
                             {r.severidade || "Normal"}
                           </span>
                         </div>
@@ -712,6 +719,7 @@ function ProjetoPage() {
           {/* ABA TAREFAS (BACKLOG KANBAN + GRAFO CPM) */}
           {abaAtiva === "tarefas" && (() => {
             const todasTarefas = [...(projeto?.tarefas || [])].sort((a, b) => (a.id || 0) - (b.id || 0));
+            const mapaNumeroTarefa = new Map(todasTarefas.map((item, idx) => [item.id, item.ordemSequencial && item.ordemSequencial > 0 ? item.ordemSequencial : idx + 1]));
 
             const tarefasAFazer = todasTarefas.filter(
               (t) => t.status === "A Fazer" || (!t.status && (t.percentualConcluido ?? 0) === 0)
@@ -743,11 +751,10 @@ function ProjetoPage() {
                       <button
                         type="button"
                         onClick={() => setModoVisualizacaoTarefas("backlog")}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
-                          modoVisualizacaoTarefas === "backlog"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${modoVisualizacaoTarefas === "backlog"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-gray-600 hover:text-gray-900"
-                        }`}
+                          }`}
                       >
                         <Kanban className="h-3.5 w-3.5" />
                         Quadro Backlog
@@ -755,11 +762,10 @@ function ProjetoPage() {
                       <button
                         type="button"
                         onClick={() => setModoVisualizacaoTarefas("grafo")}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
-                          modoVisualizacaoTarefas === "grafo"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${modoVisualizacaoTarefas === "grafo"
                             ? "bg-white text-blue-600 shadow-xs"
                             : "text-gray-600 hover:text-gray-900"
-                        }`}
+                          }`}
                       >
                         <List className="h-3.5 w-3.5" />
                         Grafo CPM (Lista)
@@ -817,7 +823,7 @@ function ProjetoPage() {
                                   <div className="flex-1">
                                     <p className="font-bold text-slate-900 text-sm leading-snug">{t.descricao}</p>
                                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                      <span className="text-[11px] font-semibold text-slate-400">ID: #{t.id}</span>
+                                      <span className="text-[11px] font-semibold text-slate-400">ID: #{mapaNumeroTarefa.get(t.id) || t.ordemSequencial || t.id}</span>
                                       <span className="text-[11px] text-slate-500 flex items-center gap-1">
                                         <Clock className="h-3 w-3" /> {t.duracaoDias}d
                                       </span>
@@ -921,7 +927,7 @@ function ProjetoPage() {
                                   <div className="flex-1">
                                     <p className="font-bold text-slate-900 text-sm leading-snug">{t.descricao}</p>
                                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                      <span className="text-[11px] font-semibold text-slate-400">ID: #{t.id}</span>
+                                      <span className="text-[11px] font-semibold text-slate-400">ID: #{mapaNumeroTarefa.get(t.id) || t.ordemSequencial || t.id}</span>
                                       <span className="text-[11px] text-slate-500 flex items-center gap-1">
                                         <Clock className="h-3 w-3" /> {t.duracaoDias}d
                                       </span>
@@ -975,11 +981,10 @@ function ProjetoPage() {
                                         key={val}
                                         type="button"
                                         onClick={() => handleAjustarProgressoRapido(t, val)}
-                                        className={`text-[10px] py-0.5 px-2 rounded font-semibold transition ${
-                                          pct === val
+                                        className={`text-[10px] py-0.5 px-2 rounded font-semibold transition ${pct === val
                                             ? "bg-blue-600 text-white"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                        }`}
+                                          }`}
                                       >
                                         {val}%
                                       </button>
@@ -1046,7 +1051,7 @@ function ProjetoPage() {
                                       <p className="font-bold text-slate-800 text-sm line-through text-slate-500">{t.descricao}</p>
                                     </div>
                                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                      <span className="text-[11px] font-semibold text-slate-400">ID: #{t.id}</span>
+                                      <span className="text-[11px] font-semibold text-slate-400">ID: #{mapaNumeroTarefa.get(t.id) || t.ordemSequencial || t.id}</span>
                                       <span className="text-[11px] text-slate-500">Duração: {t.duracaoDias}d</span>
                                       {isCritica && (
                                         <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
@@ -1121,13 +1126,12 @@ function ProjetoPage() {
                           return (
                             <div
                               key={t.id || idx}
-                              className={`p-4 border rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition bg-white shadow-sm ${
-                                isGargaloAtivo
+                              className={`p-4 border rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition bg-white shadow-sm ${isGargaloAtivo
                                   ? "border-rose-300 ring-1 ring-rose-200"
                                   : isConcluida
-                                  ? "border-gray-200 bg-gray-50/30"
-                                  : "border-gray-200 hover:border-gray-300"
-                              }`}
+                                    ? "border-gray-200 bg-gray-50/30"
+                                    : "border-gray-200 hover:border-gray-300"
+                                }`}
                             >
                               <div className="flex-1 mr-4">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -1135,13 +1139,12 @@ function ProjetoPage() {
                                   <p className="font-bold text-gray-900 text-sm">{t.descricao}</p>
 
                                   {/* Badge de Status do Backlog */}
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                    statusAtual === "Feito"
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusAtual === "Feito"
                                       ? "bg-emerald-100 text-emerald-800"
                                       : statusAtual === "Fazendo"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-slate-100 text-slate-700"
-                                  }`}>
+                                        ? "bg-blue-100 text-blue-800"
+                                        : "bg-slate-100 text-slate-700"
+                                    }`}>
                                     {statusAtual}
                                   </span>
 
@@ -1190,7 +1193,7 @@ function ProjetoPage() {
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                                 <span className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-medium ml-1">
-                                  ID: {t.id}
+                                  ID: #{mapaNumeroTarefa.get(t.id) || t.ordemSequencial || t.id}
                                 </span>
                               </div>
                             </div>
@@ -1237,11 +1240,10 @@ function ProjetoPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs px-3 py-1 rounded-full font-bold ${
-                          r.severidade === "Crítico" ? "bg-rose-100 text-rose-800" :
-                          r.severidade === "Alto" ? "bg-amber-100 text-amber-800" :
-                          r.severidade === "Médio" ? "bg-yellow-100 text-yellow-800" : "bg-emerald-100 text-emerald-800"
-                        }`}>
+                        <span className={`text-xs px-3 py-1 rounded-full font-bold ${r.severidade === "Crítico" ? "bg-rose-100 text-rose-800" :
+                            r.severidade === "Alto" ? "bg-amber-100 text-amber-800" :
+                              r.severidade === "Médio" ? "bg-yellow-100 text-yellow-800" : "bg-emerald-100 text-emerald-800"
+                          }`}>
                           {r.severidade || "MÉDIO"}
                         </span>
                         {r.id && (
@@ -1307,7 +1309,7 @@ function ProjetoPage() {
           )}
 
           {/* ABA LIÇÕES */}
-          {abaAtiva === "licoes" && (
+          {abaAtiva === "licoes" && isAdmin && (
             <div className="space-y-6">
               <div className="flex flex-wrap justify-between items-center gap-4">
                 <div>
@@ -1687,7 +1689,7 @@ function ProjetoPage() {
         )}
 
         {/* Modal Registrar Lição Aprendida (RAG) */}
-        {mostrarModalLicao && (
+        {mostrarModalLicao && isAdmin && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Registrar Lição Aprendida (RAG)</h3>

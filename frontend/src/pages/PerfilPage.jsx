@@ -7,7 +7,7 @@ import { Brain, User, LogOut, ArrowLeft, Save, Trash2, AlertTriangle, ShieldChec
 
 function PerfilPage() {
   const navigate = useNavigate();
-  const { user, logout, atualizarUsuarioContext } = useAuth();
+  const { user, logout, atualizarUsuarioContext, isAdmin } = useAuth();
 
   const [nome, setNome] = useState(user?.nome || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -122,6 +122,14 @@ function PerfilPage() {
 
             <div className="flex items-center gap-4">
               <ThemeToggle />
+              {isAdmin && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-3.5 py-2 rounded-xl text-xs sm:text-sm transition shadow-sm flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="h-4 w-4" /> Painel Admin
+                </button>
+              )}
               <button
                 onClick={() => navigate("/projetos")}
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition flex items-center gap-1.5"
@@ -171,7 +179,7 @@ function PerfilPage() {
               <h3 className="text-xl font-bold text-gray-900">{user?.nome || "Usuário"}</h3>
               <p className="text-sm text-gray-500">{user?.email || "usuario@projectmind.com"}</p>
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold mt-1">
-                <ShieldCheck className="h-4 w-4" /> Conta Ativa
+                <ShieldCheck className="h-4 w-4" /> {isAdmin ? "Administrador (Acesso RAG)" : "Conta Ativa"}
               </div>
             </div>
           </div>

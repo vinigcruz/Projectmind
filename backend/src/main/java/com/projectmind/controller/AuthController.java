@@ -31,11 +31,13 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Login realizado com sucesso");
-            response.put("token", "fake-jwt-token-projectmind-" + usuario.getId());
+            response.put("token", "pm-token-" + usuario.getId());
             response.put("userId", usuario.getId());
             response.put("id", usuario.getId());
             response.put("nome", usuario.getNome());
             response.put("email", usuario.getEmail());
+            response.put("role", usuario.getRole());
+            response.put("isAdmin", usuario.isAdmin());
 
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -56,6 +58,8 @@ public class AuthController {
             response.put("id", novoUsuario.getId());
             response.put("nome", novoUsuario.getNome());
             response.put("email", novoUsuario.getEmail());
+            response.put("role", novoUsuario.getRole());
+            response.put("isAdmin", novoUsuario.isAdmin());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {

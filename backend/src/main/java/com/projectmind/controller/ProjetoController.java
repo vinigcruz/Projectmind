@@ -4,6 +4,7 @@ import com.projectmind.domain.LicaoAprendida;
 import com.projectmind.domain.Projeto;
 import com.projectmind.domain.Risco;
 import com.projectmind.domain.Tarefa;
+import com.projectmind.domain.Usuario;
 import com.projectmind.service.RAGService;
 import com.projectmind.repository.ProjetoRepository;
 import com.projectmind.repository.RiscoRepository;
@@ -42,29 +43,60 @@ public class ProjetoController {
         this.ragService = ragService;
     }
 
-    @GetMapping("/ping")
-    public ResponseEntity<Map<String, String>> ping() {
-        try { usuarioRepository.count(); } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("status", "ok"));
-    }
-
-    // GET /api/projetos - Lista os projetos do usuário logado
-    @GetMapping
-    public ResponseEntity<List<Projeto>> listarProjetos(
-            @RequestParam(required = false) Long usuarioId,
-            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-
-        Long idFinal = usuarioId != null ? usuarioId : headerUserId;
+    private Long extrairUsuarioId(Long paramUserId, Long headerUserId, String authHeader) {
+        Long idFinal = paramUserId != null ? paramUserId : headerUserId;
         if (idFinal == null && authHeader != null && authHeader.contains("pm-token-")) {
             try {
                 String token = authHeader.replace("Bearer ", "").trim();
                 idFinal = Long.parseLong(token.replace("pm-token-", "").trim());
             } catch (Exception ignored) {}
         }
+        return idFinal;
+    }
+
+    private boolean isUsuarioAdmin(Long headerUserId, String authHeader) {
+        Long idFinal = extrairUsuarioId(null, headerUserId, authHeader);
+        if (idFinal == null) return false;
+        return usuarioRepository.findById(idFinal).map(Usuario::isAdmin).orElse(false);
+    }
+
+    private void garantirNumeracaoTarefas(Projeto projeto) {
+        if (projeto == null || projeto.getTarefas() == null || projeto.getTarefas().isEmpty()) return;
+        int proximoNumero = 1;
+        for (Tarefa t : projeto.getTarefas()) {
+            if (t.getOrdemSequencial() == null || t.getOrdemSequencial() <= 0) {
+                t.setOrdemSequencial(proximoNumero);
+                tarefaRepository.save(t);
+            }
+            proximoNumero = Math.max(proximoNumero + 1, t.getOrdemSequencial() + 1);
+        }
+    }
+
+    @GetMapping("/ping")
+    public ResponseEntity<Map<String, String>> ping() {
+        try { usuarioRepository.count(); } catch (Exception ignored) {}
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
+    // GET /api/projetos - Lista os projetos do usuário logado com numeração sequencial própria (a partir do 1)
+    @GetMapping
+    public ResponseEntity<List<Projeto>> listarProjetos(
+            @RequestParam(required = false) Long usuarioId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Long idFinal = extrairUsuarioId(usuarioId, headerUserId, authHeader);
 
         if (idFinal != null) {
-            List<Projeto> projetos = projetoRepository.findByUsuarioId(idFinal);
+            List<Projeto> projetos = projetoRepository.findByUsuarioIdOrderByIdAsc(idFinal);
+            int proximoNumero = 1;
+            for (Projeto p : projetos) {
+                if (p.getNumeroProjeto() == null || p.getNumeroProjeto() <= 0) {
+                    p.setNumeroProjeto(proximoNumero);
+                    projetoRepository.save(p);
+                }
+                proximoNumero = Math.max(proximoNumero + 1, p.getNumeroProjeto() + 1);
+            }
             return ResponseEntity.ok(projetos);
         }
 
@@ -76,11 +108,14 @@ public class ProjetoController {
     @GetMapping("/{id}")
     public ResponseEntity<?> obterProjetoPorId(@PathVariable Long id) {
         return projetoRepository.findById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .<ResponseEntity<?>>map(projeto -> {
+                    garantirNumeracaoTarefas(projeto);
+                    return ResponseEntity.ok(projeto);
+                })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Projeto não encontrado")));
     }
 
-    // POST /api/projetos - Cria um novo projeto vinculado ao usuário
+    // POST /api/projetos - Cria um novo projeto vinculado ao usuário (ID sequencial zerado por usuário)
     @PostMapping
     public ResponseEntity<?> criarProjeto(
             @RequestBody Map<String, Object> body,
@@ -94,21 +129,13 @@ public class ProjetoController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "O nome do projeto é obrigatório"));
         }
 
-        Long usuarioId = null;
+        Long paramUserId = null;
         if (body.get("usuarioId") != null) {
             try {
-                usuarioId = Long.valueOf(body.get("usuarioId").toString());
+                paramUserId = Long.valueOf(body.get("usuarioId").toString());
             } catch (Exception ignored) {}
         }
-        if (usuarioId == null && headerUserId != null) {
-            usuarioId = headerUserId;
-        }
-        if (usuarioId == null && authHeader != null && authHeader.contains("pm-token-")) {
-            try {
-                String token = authHeader.replace("Bearer ", "").trim();
-                usuarioId = Long.parseLong(token.replace("pm-token-", "").trim());
-            } catch (Exception ignored) {}
-        }
+        Long usuarioId = extrairUsuarioId(paramUserId, headerUserId, authHeader);
 
         Projeto projeto = new Projeto();
         projeto.setNome(nome.trim());
@@ -117,13 +144,25 @@ public class ProjetoController {
 
         if (usuarioId != null) {
             usuarioRepository.findById(usuarioId).ifPresent(projeto::setUsuario);
+            List<Projeto> projetosDoUsuario = projetoRepository.findByUsuarioIdOrderByIdAsc(usuarioId);
+            int maxNumero = 0;
+            for (Projeto existente : projetosDoUsuario) {
+                if (existente.getNumeroProjeto() != null && existente.getNumeroProjeto() > maxNumero) {
+                    maxNumero = existente.getNumeroProjeto();
+                } else {
+                    maxNumero = Math.max(maxNumero, projetosDoUsuario.indexOf(existente) + 1);
+                }
+            }
+            projeto.setNumeroProjeto(maxNumero + 1);
+        } else {
+            projeto.setNumeroProjeto(1);
         }
 
         Projeto salvo = projetoRepository.save(projeto);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
-    // POST /api/projetos/{id}/tarefas - Adiciona uma tarefa ao projeto
+    // POST /api/projetos/{id}/tarefas - Adiciona uma tarefa ao projeto (numeração sequencial própria do projeto)
     @PostMapping("/{id}/tarefas")
     public ResponseEntity<?> adicionarTarefa(@PathVariable Long id, @RequestBody Tarefa tarefa) {
         Projeto projeto = projetoRepository.findById(id).orElse(null);
@@ -131,6 +170,18 @@ public class ProjetoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Projeto não encontrado"));
         }
         tarefa.setProjeto(projeto);
+
+        // Calcula o próximo ID sequencial da tarefa começando do zero para cada projeto novo
+        List<Tarefa> existentes = tarefaRepository.findByProjetoIdOrderByIdAsc(id);
+        int maxOrdem = 0;
+        for (int i = 0; i < existentes.size(); i++) {
+            Integer ord = existentes.get(i).getOrdemSequencial();
+            int val = (ord != null && ord > 0) ? ord : (i + 1);
+            if (val > maxOrdem) maxOrdem = val;
+        }
+        if (tarefa.getOrdemSequencial() == null || tarefa.getOrdemSequencial() <= 0) {
+            tarefa.setOrdemSequencial(maxOrdem + 1);
+        }
 
         if (tarefa.getStatus() != null && !tarefa.getStatus().trim().isEmpty()) {
             tarefa.setStatus(tarefa.getStatus().trim());
@@ -375,15 +426,30 @@ public class ProjetoController {
                 .body(Map.of("error", "Projeto não encontrado")));
     }
 
-    // GET /api/projetos/{id}/licoes - Lista todas as lições aprendidas da base RAG
+    // GET /api/projetos/{id}/licoes - Lista todas as lições aprendidas da base RAG (RESTRITO A ADMIN)
     @GetMapping("/{id}/licoes")
-    public ResponseEntity<List<LicaoAprendida>> listarLicoes(@PathVariable Long id) {
+    public ResponseEntity<?> listarLicoes(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (!isUsuarioAdmin(headerUserId, authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("erro", "Acesso restrito ao administrador do modelo RAG.", "error", "Acesso restrito ao administrador."));
+        }
         return ResponseEntity.ok(ragService.todasAsLicoes());
     }
 
-    // POST /api/projetos/{id}/licoes - Registra uma nova lição aprendida na base RAG
+    // POST /api/projetos/{id}/licoes - Registra uma nova lição aprendida na base RAG (RESTRITO A ADMIN)
     @PostMapping("/{id}/licoes")
-    public ResponseEntity<?> adicionarLicao(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> adicionarLicao(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (!isUsuarioAdmin(headerUserId, authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("erro", "Acesso restrito ao administrador do modelo RAG.", "error", "Acesso restrito ao administrador."));
+        }
         String categoria = body.getOrDefault("categoria", "Geral");
         String descricao = body.get("descricaoConhecimento");
         if (descricao == null || descricao.trim().isEmpty()) {
@@ -393,9 +459,17 @@ public class ProjetoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(salva);
     }
 
-    // DELETE /api/projetos/{id}/licoes/{licaoId} - Remove uma lição aprendida
+    // DELETE /api/projetos/{id}/licoes/{licaoId} - Remove uma lição aprendida (RESTRITO A ADMIN)
     @DeleteMapping("/{id}/licoes/{licaoId}")
-    public ResponseEntity<?> excluirLicao(@PathVariable Long id, @PathVariable Long licaoId) {
+    public ResponseEntity<?> excluirLicao(
+            @PathVariable Long id,
+            @PathVariable Long licaoId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (!isUsuarioAdmin(headerUserId, authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("erro", "Acesso restrito ao administrador do modelo RAG.", "error", "Acesso restrito ao administrador."));
+        }
         boolean removida = ragService.excluirLicao(licaoId);
         if (removida) {
             return ResponseEntity.ok(Map.of("message", "Lição excluída com sucesso!"));

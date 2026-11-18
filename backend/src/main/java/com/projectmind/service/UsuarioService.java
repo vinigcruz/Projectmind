@@ -37,6 +37,8 @@ public class UsuarioService {
         String emailFormatado = usuario.getEmail().trim().toLowerCase();
         usuario.setEmail(emailFormatado);
         usuario.setNome(usuario.getNome().trim());
+        // Cadastro público SEMPRE cria usuário padrão (USER). Promoção para ADMIN só ocorre via Painel Admin.
+        usuario.setRole("USER");
 
         if (usuarioRepository.existsByEmail(emailFormatado)) {
             throw new RuntimeException("E-mail já cadastrado no sistema!");

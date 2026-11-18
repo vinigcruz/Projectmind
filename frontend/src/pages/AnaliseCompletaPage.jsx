@@ -80,7 +80,7 @@ function AnaliseCompletaPage() {
               )}
             </div>
             <p className="text-gray-500 mt-1">
-              Diagnóstico de {projeto?.nome || `Projeto #${id}`} combinando Grafos (CPM), Earned Schedule, Monte Carlo e IA Gemini.
+              Diagnóstico de {projeto?.nome || `Projeto #${projeto?.numeroProjeto || id}`} combinando Grafos (CPM), Earned Schedule, Monte Carlo e IA Gemini.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -247,8 +247,8 @@ function AnaliseCompletaPage() {
                     {sugestao}
                   </div>
                 )) || (
-                  <p className="text-sm text-gray-500">Nenhuma sugestão gerada no momento.</p>
-                )}
+                    <p className="text-sm text-gray-500">Nenhuma sugestão gerada no momento.</p>
+                  )}
               </div>
             </section>
           </div>

@@ -12,7 +12,8 @@ public class SpaController {
             "/cadastro",
             "/chat",
             "/projetos",
-            "/perfil"
+            "/perfil",
+            "/admin"
     })
     public String redirectToFrontend() {
         return "redirect:https://projectmind-frontend.onrender.com";

@@ -18,6 +18,23 @@ public record AnaliseProjetoDTO(
     List<String> premissas
 ) {
 
+    public AnaliseProjetoDTO semLicoes() {
+        return new AnaliseProjetoDTO(
+            projetoId,
+            nomeProjeto,
+            scoreSaude,
+            caracteristicas,
+            cronograma,
+            previsao,
+            riscos,
+            exposicaoTotalRiscosDias,
+            historico,
+            List.of(),
+            alertas,
+            premissas
+        );
+    }
+
     public record Caracteristicas(
         int totalTarefas,
         int concluidas,

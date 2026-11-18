@@ -2,6 +2,16 @@ import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext(null);
 
+function checkIsAdmin(userData) {
+  if (!userData || typeof userData !== "object") return false;
+  if (userData.isAdmin === true) return true;
+  if (typeof userData.role === "string" && userData.role.toUpperCase() === "ADMIN") return true;
+  if (typeof userData.email === "string" && userData.email.trim().toLowerCase() === "admin@projectmind.com") {
+    return true;
+  }
+  return false;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
@@ -64,6 +74,8 @@ export function AuthProvider({ children }) {
     });
   };
 
+  const isAdmin = checkIsAdmin(user);
+
   return (
     <AuthContext.Provider
       value={{
@@ -72,6 +84,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         atualizarUsuarioContext,
+        isAdmin,
         isAuthenticated: !!(user && typeof user === "object" && (user.id || user.userId || user.email)),
       }}
     >

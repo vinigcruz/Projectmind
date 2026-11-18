@@ -4,11 +4,11 @@ import { listarProjetos, criarProjeto, atualizarProjeto, deletarProjeto } from "
 import { obterMetricasProjeto } from "../services/auditoriaService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
-import { Brain, LayoutDashboard, User, LogOut, Plus, Sparkles, Network, BookOpen, Pencil, Trash2 } from "lucide-react";
+import { Brain, LayoutDashboard, User, LogOut, Plus, Sparkles, Network, BookOpen, Pencil, Trash2, ShieldCheck } from "lucide-react";
 
 function MeusProjetosPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [projetos, setProjetos] = useState([]);
   const [metricasProjetos, setMetricasProjetos] = useState({});
   const [carregando, setCarregando] = useState(true);
@@ -39,7 +39,7 @@ function MeusProjetosPage() {
                 setMetricasProjetos((prev) => ({ ...prev, [p.id]: m }));
               }
             })
-            .catch(() => {});
+            .catch(() => { });
         });
       }
     } catch (err) {
@@ -132,6 +132,14 @@ function MeusProjetosPage() {
 
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
               <ThemeToggle />
+              {isAdmin && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm flex items-center gap-2"
+                >
+                  <ShieldCheck className="h-4 w-4" /> Painel Admin
+                </button>
+              )}
               <button
                 onClick={() => navigate("/chat")}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm flex items-center gap-2"
@@ -292,7 +300,7 @@ function MeusProjetosPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projetos.map((projeto) => {
+            {projetos.map((projeto, idx) => {
               const metrica = metricasProjetos[projeto.id];
               const scoreTexto = metrica?.scoreSaude != null ? `${metrica.scoreSaude}% Saúde` : "—";
               const progressoReal = metrica?.cronograma?.progressoRealPercentual ?? 0;
@@ -305,13 +313,12 @@ function MeusProjetosPage() {
                 >
                   <div>
                     <div className="flex justify-between items-start mb-2 gap-2">
-                      <h3 className="text-xl font-bold text-gray-900 leading-snug break-words flex-1">{projeto.nome}</h3>
+                      <h3 className="text-xl font-bold text-gray-900 leading-snug break-words flex-1"><span className="text-xs font-mono font-semibold text-gray-400 mr-2">#{projeto.numeroProjeto || idx + 1}</span>{projeto.nome}</h3>
                       <div className="flex items-center gap-1 shrink-0">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold mr-1 ${
-                          metrica?.scoreSaude != null && metrica.scoreSaude < 40 ? "bg-amber-100 text-amber-800" :
-                          metrica?.scoreSaude != null && metrica.scoreSaude >= 70 ? "bg-emerald-100 text-emerald-800" :
-                          "bg-blue-50 text-blue-700"
-                        }`}>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold mr-1 ${metrica?.scoreSaude != null && metrica.scoreSaude < 40 ? "bg-amber-100 text-amber-800" :
+                            metrica?.scoreSaude != null && metrica.scoreSaude >= 70 ? "bg-emerald-100 text-emerald-800" :
+                              "bg-blue-50 text-blue-700"
+                          }`}>
                           {scoreTexto}
                         </span>
                         <button

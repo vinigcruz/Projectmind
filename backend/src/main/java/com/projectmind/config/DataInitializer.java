@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -43,20 +44,43 @@ public class DataInitializer implements CommandLineRunner {
 
     private void inicializarDadosPadrao() {
         try {
-            if (usuarioRepository.count() == 0) {
-                Usuario user = new Usuario();
-                user.setNome("Usuário Teste");
-                user.setEmail("admin@projectmind.com");
-                user.setSenha("123456");
-                usuarioRepository.save(user);
+            boolean bancoVazio = usuarioRepository.count() == 0;
 
+            // Garante que a conta-mestre admin@projectmind.com sempre exista e possua role ADMIN
+            Optional<Usuario> adminOpt = usuarioRepository.findByEmail("admin@projectmind.com");
+            Usuario adminUser;
+            if (adminOpt.isPresent()) {
+                adminUser = adminOpt.get();
+                if (!"ADMIN".equalsIgnoreCase(adminUser.getRole())) {
+                    adminUser.setRole("ADMIN");
+                    adminUser = usuarioRepository.save(adminUser);
+                }
+            } else {
+                adminUser = new Usuario();
+                adminUser.setNome("Administrador ProjectMind");
+                adminUser.setEmail("admin@projectmind.com");
+                adminUser.setSenha("123456");
+                adminUser.setRole("ADMIN");
+                adminUser = usuarioRepository.save(adminUser);
+            }
+
+            // Garante que usuários antigos sem role definida recebam USER
+            for (Usuario u : usuarioRepository.findAll()) {
+                if (u.getRole() == null || u.getRole().isBlank()) {
+                    u.setRole(u.isAdmin() ? "ADMIN" : "USER");
+                    usuarioRepository.save(u);
+                }
+            }
+
+            if (bancoVazio) {
                 // Projeto 1
                 Projeto p1 = new Projeto();
+                p1.setNumeroProjeto(1);
                 p1.setNome("Sistema de E-commerce");
                 p1.setDescricao("Plataforma web de e-commerce com integração de pagamento, carrinho e catálogo.");
                 p1.setDataInicio(LocalDate.now());
                 p1.setDataFimPlanejada(LocalDate.now().plusMonths(3));
-                p1.setUsuario(user);
+                p1.setUsuario(adminUser);
                 projetoRepository.save(p1);
 
                 Tarefa t1 = new Tarefa();
@@ -96,11 +120,12 @@ public class DataInitializer implements CommandLineRunner {
 
                 // Projeto 2
                 Projeto p2 = new Projeto();
+                p2.setNumeroProjeto(2);
                 p2.setNome("Migração Cloud AWS");
                 p2.setDescricao("Migração de infraestrutura local para AWS ECS e RDS.");
                 p2.setDataInicio(LocalDate.now().minusDays(10));
                 p2.setDataFimPlanejada(LocalDate.now().plusMonths(2));
-                p2.setUsuario(user);
+                p2.setUsuario(adminUser);
                 projetoRepository.save(p2);
             }
 

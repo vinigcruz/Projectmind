@@ -21,6 +21,9 @@ public class Usuario {
     @Column(nullable = false)
     private String senha;
 
+    @Column(length = 20)
+    private String role; // "ADMIN" ou "USER"
+
     @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Projeto> projetos;
@@ -45,6 +48,20 @@ public class Usuario {
 
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
+
+    public String getRole() {
+        if (role != null && !role.isBlank()) {
+            return role.toUpperCase();
+        }
+        return isAdmin() ? "ADMIN" : "USER";
+    }
+
+    public void setRole(String role) { this.role = role; }
+
+    public boolean isAdmin() {
+        if ("ADMIN".equalsIgnoreCase(this.role)) return true;
+        return this.email != null && this.email.trim().equalsIgnoreCase("admin@projectmind.com");
+    }
 
     public List<Projeto> getProjetos() { return projetos; }
     public void setProjetos(List<Projeto> projetos) { this.projetos = projetos; }
