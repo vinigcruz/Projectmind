@@ -1,10 +1,21 @@
-const CACHE_NAME = "projectmind-pwa-v11";
-const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.svg", "/pwa-192x192.png", "/pwa-512x512.png"];
+const CACHE_NAME = "projectmind-pwa-v12";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/favicon.svg",
+  "/apple-touch-icon.png",
+  "/pwa-192x192.png",
+  "/pwa-512x512.png",
+];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).catch(() => {})
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .catch(() => {})
   );
 });
 
@@ -19,24 +30,34 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Estratégia Network-First: garante dados e deploys sempre atualizados do Render, com fallback offline para o shell do app
+// Cache inteligente de todos os bundles JS/CSS/Fontes para abrir o app 100% sem dados móveis (Modo Avião)
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  // Nunca faz cache das chamadas da API REST
   if (url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response && response.status === 200 && response.type === "basic") {
+        if (response && response.status === 200) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)).catch(() => {});
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(request, clone))
+            .catch(() => {});
         }
         return response;
       })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match("/index.html")))
+      .catch(() =>
+        caches.match(request).then((cached) => {
+          if (cached) return cached;
+          if (request.mode === "navigate" || request.headers.get("accept")?.includes("text/html")) {
+            return caches.match("/index.html");
+          }
+          return cached;
+        })
+      )
   );
 });

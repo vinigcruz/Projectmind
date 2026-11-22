@@ -15,22 +15,25 @@ function checkIsAdmin(userData) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      // Limpa qualquer dado residual antigo de localStorage para não reabrir sessões antigas
-      localStorage.removeItem("pm_user");
-      localStorage.removeItem("pm_token");
-
-      const savedUser = sessionStorage.getItem("pm_user");
+      // Restaura sessão tanto do sessionStorage quanto do localStorage (permitindo abrir o app já logado mesmo sem dados móveis)
+      const savedUser = sessionStorage.getItem("pm_user") || localStorage.getItem("pm_user");
+      const savedToken = sessionStorage.getItem("pm_token") || localStorage.getItem("pm_token");
       if (!savedUser) return null;
       const parsed = JSON.parse(savedUser);
       if (!parsed || typeof parsed !== "object" || (!parsed.id && !parsed.userId && !parsed.email)) {
         sessionStorage.removeItem("pm_user");
         sessionStorage.removeItem("pm_token");
+        localStorage.removeItem("pm_user");
+        localStorage.removeItem("pm_token");
         return null;
+      }
+      sessionStorage.setItem("pm_user", JSON.stringify(parsed));
+      if (savedToken) {
+        sessionStorage.setItem("pm_token", savedToken);
+        localStorage.setItem("pm_token", savedToken);
       }
       return parsed;
     } catch {
-      sessionStorage.removeItem("pm_user");
-      sessionStorage.removeItem("pm_token");
       return null;
     }
   });
@@ -41,9 +44,13 @@ export function AuthProvider({ children }) {
     }
     setUser(userData);
     try {
-      sessionStorage.setItem("pm_user", JSON.stringify(userData));
+      const serialized = JSON.stringify(userData);
+      sessionStorage.setItem("pm_user", serialized);
+      localStorage.setItem("pm_user", serialized);
+      localStorage.setItem("pm_last_known_user", serialized);
       if (userData?.token) {
         sessionStorage.setItem("pm_token", userData.token);
+        localStorage.setItem("pm_token", userData.token);
       }
     } catch (e) {
       console.error("Erro ao salvar sessão:", e);
@@ -66,7 +73,10 @@ export function AuthProvider({ children }) {
     setUser((prev) => {
       const updated = { ...prev, ...dadosAtualizados };
       try {
-        sessionStorage.setItem("pm_user", JSON.stringify(updated));
+        const serialized = JSON.stringify(updated);
+        sessionStorage.setItem("pm_user", serialized);
+        localStorage.setItem("pm_user", serialized);
+        localStorage.setItem("pm_last_known_user", serialized);
       } catch (e) {
         console.error("Erro ao salvar dados atualizados do usuário:", e);
       }

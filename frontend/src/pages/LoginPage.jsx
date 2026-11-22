@@ -6,11 +6,15 @@ import { Brain, AlertCircle, Loader2 } from "lucide-react";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+
+  if (isAuthenticated) {
+    setTimeout(() => navigate("/projetos", { replace: true }), 0);
+  }
 
   const handleLogin = async (event) => {
     event.preventDefault();

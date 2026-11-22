@@ -1,0 +1,174 @@
+================================================================================
+   GUIA COMPLETO DE APRESENTACAO DO APLICATIVO — PROJECTMIND (TCC)
+================================================================================
+
+LINK EM PRODUCAO (RENDER):
+https://projectmind-frontend.onrender.com
+
+--------------------------------------------------------------------------------
+0. PREPARACAO (5 MINUTOS ANTES DE COMECAR)
+--------------------------------------------------------------------------------
+1. Abra o sistema no computador da apresentacao e ja faca login na sua conta
+   de Administrador.
+2. Tenha o seu iPhone 13 Pro em maos com o ProjectMind instalado na Tela de
+   Inicio (PWA) para mostrar fisicamente a banca que ele roda como aplicativo
+   nativo em tela cheia.
+3. Deixe o texto abaixo copiado no Ctrl+C para colar no Chat IA durante a
+   demonstracao:
+
+   Preciso desenvolver um sistema ERP de controle de pedidos, vendas e estoque. Crie automaticamente as tarefas com prazos no backlog e mapeie os possíveis riscos deste projeto.
+
+--------------------------------------------------------------------------------
+1. ABERTURA E CONVITE INTERATIVO COM O QR CODE (1 a 2 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+- Ja logado na tela inicial (Meus Projetos), clique no seu Avatar no canto
+  superior direito -> clique em "QR Code de Acesso".
+- Deixe o QR Code aberto por ~15 segundos no projetor para os avaliadores
+  escanearem com o celular.
+- Depois clique em "Fechar".
+
+[O QUE FALAR]:
+"Boa tarde a banca. O ProjectMind e uma plataforma inteligente de gestao
+preditiva e prescritiva de projetos que une algoritmos deterministicos
+(Caminho Critico e Earned Schedule), simulacao estocastica de Monte Carlo e
+Inteligencia Artificial Generativa (Google Gemini).
+O sistema foi construido como um PWA (Progressive Web App) 100% responsivo,
+adaptando-se inclusive a dispositivos com Notch e Dynamic Island. Convido os
+professores a apontarem a camera do celular para este QR Code na tela — que e
+um recurso exclusivo do perfil Administrador — para acompanharem o sistema em
+tempo real nos seus proprios aparelhos."
+
+--------------------------------------------------------------------------------
+2. CRIACAO DO PROJETO E NAVEGACAO MINIMALISTA (1 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+- Clique no Avatar para mostrar o menu dropdown minimalista e alterne 1 vez
+  entre Modo Escuro e Modo Claro para demonstrar o tema global.
+- Clique no botao "+ Novo Projeto".
+- Preencha:
+  * Nome do Projeto:
+    Sistema ERP de Pedidos, Vendas e Estoque
+  * Descricao:
+    Plataforma web para controle de pedidos, faturamento, baixa de estoque em tempo real e gateway de pagamento.
+- Clique em "Salvar".
+
+[O QUE FALAR]:
+"Projetamos uma interface limpa e focada em produtividade, concentrando a
+navegacao, preferencias de tema e governanca no menu do Avatar. Vou criar
+agora um projeto real do zero: um Sistema ERP de Pedidos, Vendas e Estoque.
+Observem que ele inicia com numeracao sequencial propria e ainda sem tarefas
+ou riscos."
+
+--------------------------------------------------------------------------------
+3. O GRANDE DIFERENCIAL: CHAT AGENTICO COM IA (2 a 3 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+1. Clique no Avatar -> "Assistente IA".
+2. Confirme no seletor do topo que o projeto "Sistema ERP de Pedidos, Vendas e
+   Estoque" esta selecionado.
+3. Cole (Ctrl+V) o prompt no chat e envie:
+   Preciso desenvolver um sistema ERP de controle de pedidos, vendas e estoque. Crie automaticamente as tarefas com prazos no backlog e mapeie os possíveis riscos deste projeto.
+4. Quando a resposta chegar, destaque a confirmacao verde no final da mensagem:
+   "[Automacao ProjectMind]: X tarefa(s) foram cadastradas no Backlog ('A Fazer' / CPM) e Y risco(s) foram integrados a Matriz Quantitativa..."
+5. Clique rapidamente em um botao da barra lateral direita ("RF/NF" ou
+   "Diagrama") apenas para mostrar o modal de validacao de documentos/arquivos,
+   e feche o modal.
+6. Clique no botao verde "Ver Tarefas e Riscos no Projeto" dentro da resposta
+   da IA.
+
+[O QUE FALAR]:
+"Em ferramentas comuns, o gestor conversa com uma IA e depois precisa copiar e
+cadastrar tarefa por tarefa manualmente. No ProjectMind, implementamos uma
+arquitetura agentica: quando peco para a IA estruturar o projeto, ela
+decompoe a engenharia de software em etapas tecnicas com estimativas em dias,
+identifica os riscos criticos do negocio e o nosso backend Java intercepta
+essa resposta estruturada, gravando automaticamente todas as tarefas
+encadeadas no Backlog e os riscos na Matriz Quantitativa.
+Alem disso, pela barra lateral, o gestor pode anexar arquivos de requisitos
+(RF/RNF), prototipos ou diagramas para auditoria tecnica da IA.
+Clicando em 'Ver Tarefas e Riscos no Projeto', vamos direto para o painel
+analitico."
+
+--------------------------------------------------------------------------------
+4. BACKLOG KANBAN, EXECUCAO REAL E CAMINHO CRITICO CPM (2 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+1. Na tela do projeto, clique na aba "Tarefas & Backlog".
+2. Mostre que todas as tarefas geradas pela IA ja estao na coluna "A Fazer",
+   numeradas sequencialmente (#1, #2, #3...).
+3. Na Tarefa #1, clique em "Concluir" (vai instantaneamente para Feito - 100%).
+4. Na Tarefa #2, clique em "Iniciar" (vai para Fazendo - 50%).
+5. Clique no botao "Grafo CPM / Dependencias" (acima das colunas do Kanban)
+   para mostrar a visao de Caminho Critico.
+
+[O QUE FALAR]:
+"Todas as tarefas criadas pela IA ja estao no nosso quadro Kanban. Quando eu
+concluo a primeira tarefa e inicio a segunda, a atualizacao visual e
+instantanea e o backend registra as datas reais de inicio e conclusao,
+calculando o SPI (Indice de Desempenho de Prazo) pelo metodo Earned Schedule.
+Alternando para a visao de Grafo CPM, o motor em Java executa a Teoria dos
+Grafos para calcular o Inicio Mais Cedo (ES), Fim Mais Cedo (EF) e a Folga de
+cada tarefa. As tarefas destacadas como Criticas possuem folga zero: qualquer
+atraso nelas impacta diretamente a data final do projeto."
+
+--------------------------------------------------------------------------------
+5. MATRIZ QUANTITATIVA DE RISCOS E AUTO-RAG (2 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+1. Clique na aba "Matriz de Riscos".
+2. Mostre os riscos cadastrados automaticamente pela IA (Probabilidade %,
+   Impacto em dias, Exposicao e Severidade).
+3. Clique na aba "Base RAG (Licoes)" para mostrar as licoes aprendidas geradas
+   automaticamente.
+
+[O QUE FALAR]:
+"Na aba Matriz de Riscos, os riscos identificados pela IA ja foram
+quantificados matematicamente: multiplicamos a Probabilidade pelo Impacto em
+dias para obter a Exposicao Esperada em dias de atraso e classificar a
+severidade automaticamente.
+E aqui entra o nosso mecanismo de Auto-RAG: toda vez que uma tarefa e
+concluida ou um risco e cadastrado, o sistema extrai automaticamente uma Licao
+Aprendida para a base de conhecimento. Em analises futuras, o algoritmo de
+similaridade lexica recupera essas licoes para que a equipe nao repita erros
+passados."
+
+--------------------------------------------------------------------------------
+6. SIMULACAO DE MONTE CARLO (P50 / P80) E RELATORIO OFICIAL DA IA (2 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+1. Volte na aba "Dashboards & Previsoes" e aponte para as datas P50 e P80.
+2. Clique no botao azul "Analise IA" no topo da tela.
+3. Mostre o Score de Saude (0 a 100) e o Relatorio Prescritivo em 6 topicos
+   gerado pelo Gemini.
+
+[O QUE FALAR]:
+"Como o metodo CPM tradicional nao considera imprevistos, nosso backend roda a
+Simulacao de Monte Carlo, simulando milhares de cenarios com a probabilidade
+dos riscos acontecerem. Isso nos entrega o P50 (cenario mediano para meta
+interna da equipe) e o P80 (cenario seguro com 80% de confianca, ja embutindo
+a margem de contingencia para contrato com o cliente).
+E ao clicar em Analise IA, o sistema consolida todos esses numeros matematicos
+exatos e os envia para a IA elaborar o Diagnostico Prescritivo Oficial em 6
+topicos, entregando um Plano de Acao direto sem risco de a IA alucinar datas
+ou metricas."
+
+--------------------------------------------------------------------------------
+7. FECHAMENTO COM GOVERNANCA: PAINEL ADMIN RBAC (1 min)
+--------------------------------------------------------------------------------
+[O QUE FAZER NA TELA]:
+1. Clique no Avatar no canto superior direito -> clique em "Painel Admin".
+2. Mostre rapidamente as 3 abas de governanca: Usuarios (RBAC Admin/User),
+   Auditoria Global de Projetos e Curadoria da Base RAG.
+3. Role ate o final da pagina e clique no botao flutuante "Topo" para subir
+   suavemente de volta ao inicio.
+
+[O QUE FALAR PARA ENCERRAR]:
+"Por fim, para garantir governanca corporativa, implementamos controle de
+acesso baseado em papeis (RBAC). No Painel Admin, o administrador monitora a
+saude global de todos os projetos da organizacao, gerencia permissoes de
+usuarios e faz a curadoria da Base de Conhecimento RAG.
+Com isso, o ProjectMind entrega um ciclo completo: da concepcao agentica com
+IA ate o controle matematico de riscos e governanca. Muito obrigado, estou a
+disposicao da banca!"
+================================================================================
