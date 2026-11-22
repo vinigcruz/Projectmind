@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import ThemeToggle from "../components/ThemeToggle.jsx";
+import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import { atualizarUsuario, excluirUsuario } from "../services/authService.js";
 import { Brain, User, LogOut, ArrowLeft, Save, Trash2, AlertTriangle, ShieldCheck, Mail, Lock } from "lucide-react";
 
@@ -120,37 +120,8 @@ function PerfilPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              {isAdmin && (
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-3.5 py-2 rounded-xl text-xs sm:text-sm transition shadow-sm flex items-center gap-1.5"
-                >
-                  <ShieldCheck className="h-4 w-4" /> Painel Admin
-                </button>
-              )}
-              <button
-                onClick={() => navigate("/projetos")}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition flex items-center gap-1.5"
-              >
-                <ArrowLeft className="h-4 w-4" /> Meus Projetos
-              </button>
-              <div className="flex items-center gap-3 border-l pl-4 border-gray-200">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold shadow-sm">
-                  <User className="h-5 w-5" />
-                </div>
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate("/login");
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition"
-                  title="Sair"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="flex items-center">
+              <UserMenuDropdown />
             </div>
           </div>
         </div>

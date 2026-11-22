@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   User,
+  LayoutDashboard,
   Sparkles,
   ShieldCheck,
   Moon,
@@ -110,6 +111,20 @@ export default function UserMenuDropdown() {
 
             {/* Navegação Principal */}
             <div className="py-1.5 px-1.5 space-y-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setAberto(false);
+                  navigate("/projetos");
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <LayoutDashboard className="h-4 w-4" />
+                </div>
+                <span>Meus Projetos</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {

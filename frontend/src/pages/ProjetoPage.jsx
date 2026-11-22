@@ -16,7 +16,7 @@ import {
 } from "../services/projetoService.js";
 import { obterMetricasProjeto } from "../services/auditoriaService.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import ThemeToggle from "../components/ThemeToggle.jsx";
+import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import {
   Brain,
   User,
@@ -436,47 +436,14 @@ function ProjetoPage() {
               <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <ThemeToggle />
-              {isAdmin && (
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  <ShieldCheck className="h-4 w-4" /> Painel Admin
-                </button>
-              )}
+            <div className="flex items-center gap-2.5 sm:gap-3">
               <button
                 onClick={() => navigate(`/projetos/${id}/analise`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap cursor-pointer"
               >
                 Análise IA
               </button>
-              <button
-                onClick={() => navigate("/chat")}
-                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap"
-              >
-                Chat IA
-              </button>
-              <div
-                onClick={() => navigate("/perfil")}
-                className="flex items-center gap-2 cursor-pointer pl-2 border-l border-gray-200 group"
-                title="Meu Perfil"
-              >
-                <div className="w-9 h-9 bg-blue-600 group-hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition shadow-sm">
-                  <User className="h-4 w-4" />
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
-                className="text-gray-400 hover:text-gray-600 p-2 transition"
-                title="Sair"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
+              <UserMenuDropdown />
             </div>
           </div>
         </div>

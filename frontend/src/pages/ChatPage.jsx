@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { chatIA } from "../services/auditoriaService.js";
 import { listarProjetos } from "../services/projetoService.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import ThemeToggle from "../components/ThemeToggle.jsx";
+import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import {
   Brain,
   Send,
@@ -362,51 +362,26 @@ function ChatPage() {
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <ThemeToggle />
+          <div className="flex items-center gap-2 sm:gap-3">
             <select
               value={selectedProjetoId}
               onChange={(e) => setSelectedProjetoId(e.target.value)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 focus:outline-none max-w-[155px] sm:max-w-xs truncate"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 focus:outline-none max-w-[150px] sm:max-w-xs truncate"
             >
               <option value="">Selecione um Projeto</option>
               {projetos.map((p) => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
+                <option key={p.id} value={p.id}>{p.numeroProjeto ? `#${p.numeroProjeto} - ` : ""}{p.nome}</option>
               ))}
             </select>
-            <button
-              onClick={() => navigate("/projetos")}
-              className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap"
-            >
-              Projetos
-            </button>
             {selectedProjetoId && (
               <button
                 onClick={() => navigate(`/projetos/${selectedProjetoId}/analise`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap"
+                className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap cursor-pointer"
               >
                 Análise IA
               </button>
             )}
-            <div
-              onClick={() => navigate("/perfil")}
-              className="flex items-center gap-2 cursor-pointer pl-1.5 sm:pl-2 border-l border-gray-200 group"
-              title="Meu Perfil"
-            >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 group-hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition shadow-sm">
-                <User className="h-4 w-4" />
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                logout();
-                navigate("/login");
-              }}
-              className="text-gray-400 hover:text-gray-600 p-1.5 sm:p-2 transition"
-              title="Sair"
-            >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
+            <UserMenuDropdown />
           </div>
         </div>
 

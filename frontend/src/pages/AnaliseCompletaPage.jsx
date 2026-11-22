@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { analisarProjeto } from "../services/auditoriaService.js";
 import { obterProjeto } from "../services/projetoService.js";
-import ThemeToggle from "../components/ThemeToggle.jsx";
+import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import { Brain, ArrowLeft, Calendar, ShieldAlert, TrendingUp, AlertCircle } from "lucide-react";
 
 function AnaliseCompletaPage() {
@@ -84,13 +84,7 @@ function AnaliseCompletaPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <button
-              onClick={() => navigate("/chat")}
-              className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition shadow-sm"
-            >
-              Abrir Chat IA
-            </button>
+            <UserMenuDropdown />
           </div>
         </div>
 

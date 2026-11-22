@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import ThemeToggle from "../components/ThemeToggle.jsx";
+import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import {
   obterResumoAdmin,
   listarUsuariosAdmin,
@@ -232,39 +232,8 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-              <ThemeToggle />
-              <button
-                onClick={() => navigate("/projetos")}
-                className="border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium px-3.5 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5"
-              >
-                <LayoutDashboard className="h-4 w-4 text-blue-600" /> Meus Projetos
-              </button>
-              <button
-                onClick={() => navigate("/chat")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3.5 py-2 rounded-xl text-xs sm:text-sm transition shadow-sm flex items-center gap-1.5"
-              >
-                <Sparkles className="h-4 w-4" /> Assistente IA
-              </button>
-              <div className="flex items-center gap-2.5 border-l pl-3 border-gray-200">
-                <div
-                  onClick={() => navigate("/perfil")}
-                  className="w-9 h-9 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center text-white cursor-pointer transition shadow-sm"
-                  title={`Perfil (${user?.email})`}
-                >
-                  <User className="h-4 w-4" />
-                </div>
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate("/login");
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition"
-                  title="Sair"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="flex items-center">
+              <UserMenuDropdown />
             </div>
           </div>
         </div>
