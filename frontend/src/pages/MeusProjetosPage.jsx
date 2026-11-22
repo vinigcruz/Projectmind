@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listarProjetos, criarProjeto, atualizarProjeto, deletarProjeto } from "../services/projetoService.js";
 import { obterMetricasProjeto } from "../services/auditoriaService.js";
@@ -21,6 +21,8 @@ function MeusProjetosPage() {
   const [projetoEditando, setProjetoEditando] = useState(null);
   const [nomeEdit, setNomeEdit] = useState("");
   const [descricaoEdit, setDescricaoEdit] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const salvandoRef = useRef(false);
 
   const carregarProjetos = async (silencioso = false) => {
     if (!silencioso && projetos.length === 0) setCarregando(true);
@@ -55,20 +57,35 @@ function MeusProjetosPage() {
 
   const handleCriarProjeto = async (e) => {
     e.preventDefault();
-    if (!novoNome.trim()) return;
+    if (!novoNome.trim() || salvandoRef.current) return;
+    salvandoRef.current = true;
+    setSalvando(true);
+
+    const nomeLimpo = novoNome.trim();
+    const descLimpa = novaDescricao.trim();
+    setNovoNome("");
+    setNovaDescricao("");
+    setMostrarModal(false);
+
     try {
-      await criarProjeto({
-        nome: novoNome,
-        descricao: novaDescricao,
+      const criado = await criarProjeto({
+        nome: nomeLimpo,
+        descricao: descLimpa,
         usuarioId: user?.id || user?.userId,
       });
-      setNovoNome("");
-      setNovaDescricao("");
-      setMostrarModal(false);
-      carregarProjetos();
+      if (criado && criado.id) {
+        setProjetos((prev) => {
+          if (prev.some((p) => p.id === criado.id)) return prev;
+          return [...prev, criado];
+        });
+      }
+      carregarProjetos(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao criar projeto.");
+    } finally {
+      salvandoRef.current = false;
+      setSalvando(false);
     }
   };
 
@@ -81,18 +98,29 @@ function MeusProjetosPage() {
 
   const handleSalvarEdicaoProjeto = async (e) => {
     e.preventDefault();
-    if (!nomeEdit.trim() || !projetoEditando) return;
+    if (!nomeEdit.trim() || !projetoEditando || salvandoRef.current) return;
+    salvandoRef.current = true;
+    setSalvando(true);
+    const idAlvo = projetoEditando.id;
+    const nEdit = nomeEdit.trim();
+    const dEdit = descricaoEdit.trim();
+    setMostrarModalEditar(false);
+    setProjetoEditando(null);
+    setProjetos((prev) =>
+      prev.map((p) => (p.id === idAlvo ? { ...p, nome: nEdit, descricao: dEdit } : p))
+    );
     try {
-      await atualizarProjeto(projetoEditando.id, {
-        nome: nomeEdit.trim(),
-        descricao: descricaoEdit.trim(),
+      await atualizarProjeto(idAlvo, {
+        nome: nEdit,
+        descricao: dEdit,
       });
-      setMostrarModalEditar(false);
-      setProjetoEditando(null);
-      carregarProjetos();
+      carregarProjetos(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar o projeto no banco de dados.");
+    } finally {
+      salvandoRef.current = false;
+      setSalvando(false);
     }
   };
 
@@ -190,9 +218,10 @@ function MeusProjetosPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800"
+                    disabled={salvando}
+                    className="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
                   >
-                    Salvar
+                    {salvando ? "Salvando..." : "Salvar"}
                   </button>
                 </div>
               </form>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   obterProjeto,
@@ -90,6 +90,7 @@ function ProjetoPage() {
   const [mostrarModalLicao, setMostrarModalLicao] = useState(false);
   const [categoriaLicao, setCategoriaLicao] = useState("Geral");
   const [descLicao, setDescLicao] = useState("");
+  const salvandoAcaoRef = useRef(false);
 
   const carregarProjeto = async (silencioso = false) => {
     if (!silencioso && !projeto) setCarregando(true);
@@ -122,24 +123,31 @@ function ProjetoPage() {
   // Manipulação de Tarefas
   const handleNovaTarefa = async (e) => {
     e.preventDefault();
-    if (!descTarefa.trim()) return;
+    if (!descTarefa.trim() || salvandoAcaoRef.current) return;
+    salvandoAcaoRef.current = true;
+    const dLimpa = descTarefa.trim();
+    const durVal = parseInt(duracao);
+    const stVal = statusTarefa;
+    const pctVal = parseInt(pctTarefa);
+    setDescTarefa("");
+    setDuracao(5);
+    setStatusTarefa("A Fazer");
+    setPctTarefa(0);
+    setMostrarModalTarefa(false);
     try {
       await adicionarTarefa(id, {
-        descricao: descTarefa.trim(),
-        duracaoDias: parseInt(duracao),
-        status: statusTarefa,
-        percentualConcluido: parseInt(pctTarefa),
+        descricao: dLimpa,
+        duracaoDias: durVal,
+        status: stVal,
+        percentualConcluido: pctVal,
         tipoDependencia: "TI",
       });
-      setDescTarefa("");
-      setDuracao(5);
-      setStatusTarefa("A Fazer");
-      setPctTarefa(0);
-      setMostrarModalTarefa(false);
       carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao adicionar tarefa.");
+    } finally {
+      salvandoAcaoRef.current = false;
     }
   };
 
@@ -240,19 +248,25 @@ function ProjetoPage() {
   // Manipulação de Riscos
   const handleNovoRisco = async (e) => {
     e.preventDefault();
-    if (!descRisco.trim()) return;
+    if (!descRisco.trim() || salvandoAcaoRef.current) return;
+    salvandoAcaoRef.current = true;
+    const dRisco = descRisco.trim();
+    const pRisco = parseFloat(probRisco) / 100.0;
+    const iRisco = parseFloat(impactoRisco);
+    setDescRisco("");
+    setMostrarModalRisco(false);
     try {
       await adicionarRisco(id, {
-        descricao: descRisco.trim(),
-        probabilidade: parseFloat(probRisco) / 100.0,
-        impacto: parseFloat(impactoRisco),
+        descricao: dRisco,
+        probabilidade: pRisco,
+        impacto: iRisco,
       });
-      setDescRisco("");
-      setMostrarModalRisco(false);
       carregarProjeto(true);
     } catch (err) {
       console.error(err);
       alert("Erro ao cadastrar risco.");
+    } finally {
+      salvandoAcaoRef.current = false;
     }
   };
 
