@@ -10,6 +10,7 @@ import ProjetoPage from "./pages/ProjetoPage.jsx";
 import AnaliseCompletaPage from "./pages/AnaliseCompletaPage.jsx";
 import PerfilPage from "./pages/PerfilPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
+import ScrollTopAndBlur from "./components/ScrollTopAndBlur.jsx";
 import api from "./services/api.js";
 
 export default function App() {
@@ -28,21 +29,24 @@ export default function App() {
   }, []);
 
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/cadastro" element={<CadastroPage />} />
-      <Route element={<ProtectedRoute />}>
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/projetos" element={<MeusProjetosPage />} />
-        <Route path="/projetos/:id" element={<ProjetoPage />} />
-        <Route path="/projetos/:id/analise" element={<AnaliseCompletaPage />} />
-        <Route path="/perfil" element={<PerfilPage />} />
-      </Route>
-      <Route element={<AdminRoute />}>
-        <Route path="/admin" element={<AdminPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+    <>
+      <ScrollTopAndBlur />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/cadastro" element={<CadastroPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/projetos" element={<MeusProjetosPage />} />
+          <Route path="/projetos/:id" element={<ProjetoPage />} />
+          <Route path="/projetos/:id/analise" element={<AnaliseCompletaPage />} />
+          <Route path="/perfil" element={<PerfilPage />} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </>
   );
 }
