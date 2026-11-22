@@ -275,7 +275,7 @@ function atenderRequisicaoOffline(config) {
     return { status: 200, data: { status: "ok", mode: "offline" } };
   }
 
-  // 2. Login e Cadastro Offline
+  // 2. Login, Cadastro e Atualização de Perfil Offline
   if (url.includes("/api/usuarios/login") || url.includes("/api/usuarios/cadastro")) {
     const email = (body.email || "admin@projectmind.com").trim().toLowerCase();
     const existente = db.usuarios.find((u) => (u.email || "").toLowerCase() === email);
@@ -295,6 +295,29 @@ function atenderRequisicaoOffline(config) {
       salvarDbOffline(db);
     }
     return { status: url.includes("cadastro") ? 201 : 200, data: userObj };
+  }
+
+  const matchUsuarioId = url.match(/\/api\/usuarios\/(\d+)$/);
+  if (matchUsuarioId) {
+    const uid = matchUsuarioId[1];
+    if (metodo === "put") {
+      const idx = db.usuarios.findIndex((u) => String(u.id) === String(uid));
+      const atualizado = {
+        ...(idx >= 0 ? db.usuarios[idx] : { id: Number(uid) }),
+        nome: body.nome || "Usuário",
+        email: body.email || "usuario@projectmind.com",
+        message: "Informações atualizadas localmente!",
+      };
+      if (idx >= 0) db.usuarios[idx] = atualizado;
+      else db.usuarios.push(atualizado);
+      salvarDbOffline(db);
+      return { status: 200, data: atualizado };
+    }
+    if (metodo === "delete") {
+      db.usuarios = db.usuarios.filter((u) => String(u.id) !== String(uid));
+      salvarDbOffline(db);
+      return { status: 200, data: { message: "Conta excluída localmente!" } };
+    }
   }
 
   // 3. Listar Projetos (GET /api/projetos)
