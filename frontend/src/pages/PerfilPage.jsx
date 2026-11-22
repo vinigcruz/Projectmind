@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import { atualizarUsuario, excluirUsuario } from "../services/authService.js";
-import { Brain, User, LogOut, ArrowLeft, Save, Trash2, AlertTriangle, ShieldCheck, Mail, Lock } from "lucide-react";
+import { Brain, ArrowLeft, Save, Trash2, AlertTriangle, ShieldCheck, Mail, Lock } from "lucide-react";
 
 function PerfilPage() {
   const navigate = useNavigate();

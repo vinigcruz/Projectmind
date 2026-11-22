@@ -19,8 +19,6 @@ import { useAuth } from "../context/AuthContext.jsx";
 import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import {
   Brain,
-  User,
-  LogOut,
   ArrowLeft,
   Plus,
   CheckCircle2,
@@ -33,7 +31,6 @@ import {
   TrendingUp,
   Clock,
   ShieldAlert,
-  ShieldCheck,
   Kanban,
   List,
   Check,
@@ -44,7 +41,7 @@ import {
 function ProjetoPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, logout, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   const [projeto, setProjeto] = useState(null);
   const [metricas, setMetricas] = useState(null);

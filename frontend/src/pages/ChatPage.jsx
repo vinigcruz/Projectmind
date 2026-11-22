@@ -14,8 +14,6 @@ import {
   Calendar,
   Shield,
   AlertTriangle,
-  LogOut,
-  User,
   Paperclip,
   Upload,
   X,
@@ -120,7 +118,7 @@ const sidebarButtons = [
 
 function ChatPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [projetos, setProjetos] = useState([]);
   const [selectedProjetoId, setSelectedProjetoId] = useState("");
   const [pergunta, setPergunta] = useState("");
