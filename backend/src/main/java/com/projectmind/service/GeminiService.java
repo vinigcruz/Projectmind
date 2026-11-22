@@ -58,10 +58,10 @@ public class GeminiService {
         String sysPropKey = extrairChaveLimpa(System.getProperty("GEMINI_API_KEY"));
         String springKey = extrairChaveLimpa(this.springApiKey);
 
-        boolean isCloud = System.getenv("VERCEL") != null
-                || System.getenv("RENDER") != null
+        boolean isCloud = System.getenv("RENDER") != null
                 || System.getenv("RAILWAY_ENVIRONMENT") != null
-                || "80".equals(System.getenv("PORT"));
+                || "80".equals(System.getenv("PORT"))
+                || "8080".equals(System.getenv("PORT"));
 
         Set<String> orderedKeys = new LinkedHashSet<>();
         if (isCloud) {

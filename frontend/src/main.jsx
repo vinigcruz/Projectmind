@@ -10,6 +10,12 @@ if (localStorage.getItem("pm_theme") === "dark") {
   document.documentElement.classList.add("dark");
 }
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
