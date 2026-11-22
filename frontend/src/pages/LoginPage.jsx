@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { login as loginService } from "../services/authService.js";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import { Brain, AlertCircle, Loader2 } from "lucide-react";
 
 function LoginPage() {
@@ -50,13 +51,17 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 py-6">
-        <div className="max-w-7xl mx-auto px-4">
+      <header className="bg-white border-b border-gray-200 py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+          <div className="w-20 hidden sm:block" />
           <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-              <Brain className="h-7 w-7 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+              <Brain className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">ProjectMind</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">ProjectMind</h1>
+          </div>
+          <div className="flex items-center justify-end">
+            <ThemeToggle />
           </div>
         </div>
       </header>
