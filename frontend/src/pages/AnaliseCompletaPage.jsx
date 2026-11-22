@@ -60,7 +60,7 @@ function AnaliseCompletaPage() {
   }[cronograma?.situacaoPrazo] || "bg-gray-100 text-gray-800 border-gray-200";
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-10">
+    <div className="min-h-screen bg-gray-50 p-6 md:p-10 pm-safe-page-top">
       <div className="max-w-5xl mx-auto">
         <button
           onClick={() => navigate(`/projetos/${id}`)}

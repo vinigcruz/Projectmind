@@ -25,7 +25,12 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Ajuste de altura dinâmica (dvh) e Safe Area (Notch / Ilha Dinâmica) para Safari e PWA no iPhone 13 Pro */
+:root {
+  --pm-safe-top: env(safe-area-inset-top, 0px);
+  --pm-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Ajuste de altura dinâmica (dvh) e Safe Area Adaptativa (Dynamic Island, Notch e telas sem recorte) */
 @supports (height: 100dvh) {
   .h-screen {
     height: 100dvh !important;
@@ -35,20 +40,25 @@ body {
   }
 }
 
-/* Protege todos os cabeçalhos contra o Notch / Barra de Status do iPhone no navegador e no modo App PWA */
+/* O fundo do header preenche 100% até a borda física da tela, mas os botões descem exatamente abaixo da Dynamic Island / Notch */
 header {
-  padding-top: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) !important;
+  padding-top: calc(var(--pm-safe-top, env(safe-area-inset-top, 0px)) + 0.75rem) !important;
   padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
   padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
 }
 
-@media all and (display-mode: standalone) {
-  header {
-    padding-top: calc(env(safe-area-inset-top, 47px) + 0.75rem) !important;
-  }
-  body {
-    padding-bottom: env(safe-area-inset-bottom, 20px);
-  }
+/* Protege modais e páginas sem header fixo contra sobreposição na Dynamic Island ou Notch */
+.pm-safe-page-top {
+  padding-top: calc(var(--pm-safe-top, env(safe-area-inset-top, 0px)) + 1.5rem) !important;
+}
+
+.fixed.inset-0 {
+  padding-top: calc(var(--pm-safe-top, env(safe-area-inset-top, 0px)) + 1rem) !important;
+  padding-bottom: calc(var(--pm-safe-bottom, env(safe-area-inset-bottom, 0px)) + 1rem) !important;
+}
+
+body {
+  padding-bottom: var(--pm-safe-bottom, env(safe-area-inset-bottom, 0px));
 }
 
 /* Evita o auto-zoom do Safari no iOS ao focar em inputs/selects e melhora responsividade mobile */
