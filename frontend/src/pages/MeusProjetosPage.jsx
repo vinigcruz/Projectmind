@@ -129,12 +129,20 @@ function MeusProjetosPage() {
       `Deseja realmente excluir o projeto "${nome}"? Todos os dados vinculados (tarefas, riscos e análises) serão excluídos permanentemente do banco de dados.`
     );
     if (!confirmou) return;
+
+    // Atualização otimista instantânea (0ms): remove o card da tela e já renumera os restantes (1, 2, 3...)
+    setProjetos((prev) =>
+      prev
+        .filter((p) => p.id !== id)
+        .map((p, idx) => ({ ...p, numeroProjeto: idx + 1 }))
+    );
+
     try {
       await deletarProjeto(id);
-      carregarProjetos();
+      carregarProjetos(true);
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir o projeto do banco de dados.");
+      carregarProjetos(true);
     }
   };
 

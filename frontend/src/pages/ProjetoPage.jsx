@@ -236,12 +236,25 @@ function ProjetoPage() {
       `Deseja realmente excluir a tarefa "${descricao}"? Ela será excluída permanentemente do banco de dados.`
     );
     if (!confirmou) return;
+
+    // Remoção otimista instantânea (0ms) + renumeração sequencial das tarefas restantes
+    setProjeto((prev) =>
+      prev
+        ? {
+            ...prev,
+            tarefas: (prev.tarefas || [])
+              .filter((t) => t.id !== tarefaId)
+              .map((t, idx) => ({ ...t, ordemSequencial: idx + 1 })),
+          }
+        : prev
+    );
+
     try {
       await excluirTarefa(id, tarefaId);
       carregarProjeto(true);
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir a tarefa.");
+      carregarProjeto(true);
     }
   };
 
@@ -300,12 +313,31 @@ function ProjetoPage() {
   const handleExcluirRisco = async (riscoId, descricao) => {
     const confirmou = window.confirm(`Deseja realmente excluir o risco "${descricao}"?`);
     if (!confirmou) return;
+
+    // Remoção otimista instantânea (0ms)
+    setProjeto((prev) =>
+      prev
+        ? {
+            ...prev,
+            riscos: (prev.riscos || []).filter((r) => r.id !== riscoId),
+          }
+        : prev
+    );
+    setMetricas((prev) =>
+      prev
+        ? {
+            ...prev,
+            riscos: (prev.riscos || []).filter((r) => r.id !== riscoId),
+          }
+        : prev
+    );
+
     try {
       await excluirRisco(id, riscoId);
       carregarProjeto(true);
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir o risco.");
+      carregarProjeto(true);
     }
   };
 
@@ -330,12 +362,13 @@ function ProjetoPage() {
 
   const handleExcluirLicao = async (licaoId) => {
     if (!window.confirm("Deseja remover esta lição aprendida da base de conhecimento RAG?")) return;
+    setTodasLicoes((prev) => prev.filter((l) => l.id !== licaoId));
     try {
       await excluirLicao(id, licaoId);
       carregarProjeto(true);
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir lição aprendida.");
+      carregarProjeto(true);
     }
   };
 
