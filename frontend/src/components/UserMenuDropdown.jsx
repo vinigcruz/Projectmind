@@ -98,7 +98,7 @@ export default function UserMenuDropdown() {
         </button>
 
         {aberto && (
-          <div className="absolute right-0 mt-2.5 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl py-2 z-50 overflow-hidden">
+          <div className="absolute right-0 mt-2.5 w-64 max-w-[calc(100vw-1.5rem)] bg-white border border-gray-200 rounded-2xl shadow-xl py-2 z-50 overflow-hidden">
             {/* Cabeçalho interno do Dropdown */}
             <div className="px-4 py-3 border-b border-gray-100">
               <p className="text-sm font-bold text-gray-900 truncate">
@@ -192,19 +192,21 @@ export default function UserMenuDropdown() {
                 </span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setAberto(false);
-                  setMostrarQr(true);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-              >
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <QrCode className="h-4 w-4" />
-                </div>
-                <span>QR Code de Acesso</span>
-              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAberto(false);
+                    setMostrarQr(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <QrCode className="h-4 w-4" />
+                  </div>
+                  <span>QR Code de Acesso</span>
+                </button>
+              )}
             </div>
 
             {/* Sair */}

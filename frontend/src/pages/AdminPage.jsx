@@ -209,30 +209,32 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header Administrativo */}
       <header className="bg-white border-b border-gray-200 ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
             <div
               onClick={() => navigate("/projetos")}
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group min-w-0 flex-1"
               title="Voltar para Meus Projetos"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition">
-                <ShieldCheck className="h-6 w-6 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition shrink-0">
+                <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-purple-600 transition">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h1 className="text-base sm:text-xl font-bold text-gray-900 leading-tight group-hover:text-purple-600 transition truncate">
                     ProjectMind Admin
                   </h1>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full border border-purple-200">
+                  <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full border border-purple-200 shrink-0">
                     Governança
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">Gestão Global de Usuários, Projetos e Base RAG</p>
+                <p className="text-xs text-gray-500 hidden sm:block truncate">
+                  Gestão Global de Usuários, Projetos e Base RAG
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center shrink-0">
               <UserMenuDropdown />
             </div>
           </div>
