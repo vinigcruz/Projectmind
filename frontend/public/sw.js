@@ -1,4 +1,4 @@
-const CACHE_NAME = "projectmind-pwa-v1";
+const CACHE_NAME = "projectmind-pwa-v3";
 const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.svg", "/pwa-192x192.png", "/pwa-512x512.png"];
 
 self.addEventListener("install", (event) => {

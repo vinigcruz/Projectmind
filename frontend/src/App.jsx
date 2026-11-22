@@ -15,7 +15,7 @@ import api from "./services/api.js";
 export default function App() {
   useEffect(() => {
     // 1. Acorda o motor Java e o banco Neon no exato instante em que o site abre
-    api.get("/api/projetos/ping").catch(() => {});
+    api.get("/api/projetos/ping?db=true").catch(() => {});
 
     // 2. Heartbeat contínuo a cada 3 minutos para nunca deixar o motor Java hibernar enquanto a aba estiver aberta
     const keepAliveInterval = setInterval(() => {

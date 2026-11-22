@@ -25,13 +25,29 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Ajuste de altura dinâmica (dvh) para Safari no iPhone */
+/* Ajuste de altura dinâmica (dvh) e Safe Area (Notch / Ilha Dinâmica) para Safari e PWA no iPhone 13 Pro */
 @supports (height: 100dvh) {
   .h-screen {
     height: 100dvh !important;
   }
   .min-h-screen {
     min-height: 100dvh !important;
+  }
+}
+
+/* Protege todos os cabeçalhos contra o Notch / Barra de Status do iPhone no navegador e no modo App PWA */
+header {
+  padding-top: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) !important;
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+}
+
+@media all and (display-mode: standalone) {
+  header {
+    padding-top: calc(env(safe-area-inset-top, 47px) + 0.75rem) !important;
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
 }
 

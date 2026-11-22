@@ -73,8 +73,10 @@ public class ProjetoController {
     }
 
     @GetMapping("/ping")
-    public ResponseEntity<Map<String, String>> ping() {
-        try { usuarioRepository.count(); } catch (Exception ignored) {}
+    public ResponseEntity<Map<String, String>> ping(@RequestParam(required = false, defaultValue = "false") boolean db) {
+        if (db) {
+            try { usuarioRepository.count(); } catch (Exception ignored) {}
+        }
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
