@@ -8,7 +8,7 @@ import { Brain, LayoutDashboard, Plus, Network, BookOpen, Pencil, Trash2 } from 
 
 function MeusProjetosPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [projetos, setProjetos] = useState([]);
   const [metricasProjetos, setMetricasProjetos] = useState({});
   const [carregando, setCarregando] = useState(true);

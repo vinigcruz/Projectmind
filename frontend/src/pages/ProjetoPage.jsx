@@ -36,12 +36,13 @@ import {
   Check,
   ArrowRight,
   PlayCircle,
+  Sparkles,
 } from "lucide-react";
 
 function ProjetoPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   const [projeto, setProjeto] = useState(null);
   const [metricas, setMetricas] = useState(null);
@@ -433,13 +434,7 @@ function ProjetoPage() {
               <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
             </div>
 
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <button
-                onClick={() => navigate(`/projetos/${id}/analise`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap cursor-pointer"
-              >
-                Análise IA
-              </button>
+            <div className="flex items-center">
               <UserMenuDropdown />
             </div>
           </div>
@@ -448,12 +443,30 @@ function ProjetoPage() {
 
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <button
-          onClick={() => navigate("/projetos")}
-          className="text-sm font-medium text-gray-500 hover:text-gray-900 mb-4 flex items-center gap-1.5 transition"
-        >
-          <ArrowLeft className="h-4 w-4" /> Meus Projetos
-        </button>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <button
+            onClick={() => navigate("/projetos")}
+            className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" /> Meus Projetos
+          </button>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => navigate(`/chat?projetoId=${id}`)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4" />
+              Chat com a IA
+            </button>
+            <button
+              onClick={() => navigate(`/projetos/${id}/analise`)}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm cursor-pointer"
+            >
+              Análise IA
+            </button>
+          </div>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="flex-1 min-w-[240px]">

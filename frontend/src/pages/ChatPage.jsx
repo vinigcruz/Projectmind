@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { chatIA } from "../services/auditoriaService.js";
 import { listarProjetos } from "../services/projetoService.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -118,9 +118,11 @@ const sidebarButtons = [
 
 function ChatPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const projetoIdUrl = searchParams.get("projetoId");
+  const { user, logout, isAdmin } = useAuth();
   const [projetos, setProjetos] = useState([]);
-  const [selectedProjetoId, setSelectedProjetoId] = useState("");
+  const [selectedProjetoId, setSelectedProjetoId] = useState(projetoIdUrl || "");
   const [pergunta, setPergunta] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [mensagens, setMensagens] = useState([
@@ -151,7 +153,9 @@ function ChatPage() {
         const usuarioId = user?.id || user?.userId;
         const dados = await listarProjetos(usuarioId);
         setProjetos(dados || []);
-        if (dados && dados.length > 0) {
+        if (projetoIdUrl && (dados || []).some((p) => String(p.id) === String(projetoIdUrl))) {
+          setSelectedProjetoId(String(projetoIdUrl));
+        } else if (dados && dados.length > 0 && !selectedProjetoId) {
           setSelectedProjetoId(dados[0].id.toString());
         }
       } catch (err) {

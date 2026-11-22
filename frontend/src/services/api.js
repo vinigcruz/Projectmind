@@ -413,6 +413,9 @@ function atenderRequisicaoOffline(config) {
     }
     if (metodo === "delete") {
       db.projetos = db.projetos.filter((p) => String(p.id) !== String(pid));
+      db.projetos.forEach((p, idx) => {
+        p.numeroProjeto = idx + 1;
+      });
       salvarDbOffline(db);
       return { status: 200, data: { message: "Projeto excluído offline" } };
     }

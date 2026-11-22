@@ -64,12 +64,26 @@ public class ProjetoController {
         if (projeto == null || projeto.getTarefas() == null || projeto.getTarefas().isEmpty()) return;
         int proximoNumero = 1;
         for (Tarefa t : projeto.getTarefas()) {
-            if (t.getOrdemSequencial() == null || t.getOrdemSequencial() <= 0) {
+            if (t.getOrdemSequencial() == null || t.getOrdemSequencial() != proximoNumero) {
                 t.setOrdemSequencial(proximoNumero);
                 tarefaRepository.save(t);
             }
-            proximoNumero = Math.max(proximoNumero + 1, t.getOrdemSequencial() + 1);
+            proximoNumero++;
         }
+    }
+
+    private List<Projeto> renumerarProjetosDoUsuario(Long usuarioId) {
+        if (usuarioId == null) return List.of();
+        List<Projeto> projetos = projetoRepository.findByUsuarioIdOrderByIdAsc(usuarioId);
+        int proximoNumero = 1;
+        for (Projeto p : projetos) {
+            if (p.getNumeroProjeto() == null || p.getNumeroProjeto() != proximoNumero) {
+                p.setNumeroProjeto(proximoNumero);
+                projetoRepository.save(p);
+            }
+            proximoNumero++;
+        }
+        return projetos;
     }
 
     @GetMapping("/ping")
@@ -90,15 +104,7 @@ public class ProjetoController {
         Long idFinal = extrairUsuarioId(usuarioId, headerUserId, authHeader);
 
         if (idFinal != null) {
-            List<Projeto> projetos = projetoRepository.findByUsuarioIdOrderByIdAsc(idFinal);
-            int proximoNumero = 1;
-            for (Projeto p : projetos) {
-                if (p.getNumeroProjeto() == null || p.getNumeroProjeto() <= 0) {
-                    p.setNumeroProjeto(proximoNumero);
-                    projetoRepository.save(p);
-                }
-                proximoNumero = Math.max(proximoNumero + 1, p.getNumeroProjeto() + 1);
-            }
+            List<Projeto> projetos = renumerarProjetosDoUsuario(idFinal);
             return ResponseEntity.ok(projetos);
         }
 
@@ -111,6 +117,9 @@ public class ProjetoController {
     public ResponseEntity<?> obterProjetoPorId(@PathVariable Long id) {
         return projetoRepository.findById(id)
                 .<ResponseEntity<?>>map(projeto -> {
+                    if (projeto.getUsuario() != null && projeto.getUsuario().getId() != null) {
+                        renumerarProjetosDoUsuario(projeto.getUsuario().getId());
+                    }
                     garantirNumeracaoTarefas(projeto);
                     return ResponseEntity.ok(projeto);
                 })
@@ -479,11 +488,16 @@ public class ProjetoController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Lição não encontrada"));
     }
 
-    // DELETE /api/projetos/{id} - Remove um projeto
+    // DELETE /api/projetos/{id} - Remove um projeto e renumera os restantes (1, 2, 3...)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarProjeto(@PathVariable Long id) {
-        if (projetoRepository.existsById(id)) {
-            projetoRepository.deleteById(id);
+        Projeto alvo = projetoRepository.findById(id).orElse(null);
+        if (alvo != null) {
+            Long uid = alvo.getUsuario() != null ? alvo.getUsuario().getId() : null;
+            projetoRepository.delete(alvo);
+            if (uid != null) {
+                renumerarProjetosDoUsuario(uid);
+            }
             return ResponseEntity.ok(Map.of("message", "Projeto excluído com sucesso!"));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

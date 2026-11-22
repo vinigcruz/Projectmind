@@ -34,7 +34,7 @@ const CATEGORIAS_RAG = ["Todas", "Geral", "Cronograma", "Riscos", "Arquitetura",
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   const [abaAtiva, setAbaAtiva] = useState("usuarios");
   const [carregando, setCarregando] = useState(true);

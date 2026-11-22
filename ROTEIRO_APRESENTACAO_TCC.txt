@@ -1,0 +1,126 @@
+================================================================================
+   ROTEIRO DE APRESENTACAO RAPIDA (7 A 8 MINUTOS) — PROJECTMIND (TCC)
+================================================================================
+
+CRONOMETRAGEM TOTAL: ~7 min e 30 seg
+LINK EM PRODUCAO: https://projectmind-frontend.onrender.com
+
+TEXTO PARA DEIXAR NO CTRL+C ANTES DE COMECAR:
+Preciso desenvolver um sistema ERP de controle de pedidos, vendas e estoque. Crie automaticamente as tarefas com prazos no backlog e mapeie os possíveis riscos deste projeto.
+
+--------------------------------------------------------------------------------
+[00:00 - 01:00] 1. ABERTURA, PWA E QR CODE PARA A BANCA (1 min)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+- Ja logado em "Meus Projetos" como Admin, clique no Avatar (canto superior
+  direito) -> clique em "QR Code de Acesso".
+- Mostre por 10 segundos para a banca escanear e clique em "Fechar".
+
+O QUE FALAR:
+"Boa tarde a banca. O ProjectMind e uma plataforma inteligente de gestao
+preditiva e prescritiva de projetos que une algoritmos exatos (Caminho Critico
+CPM e Earned Schedule), Simulacao de Monte Carlo e IA Generativa (Gemini).
+O sistema e um PWA Offline-First 100% responsivo para iOS e Android. Pelo menu
+do Avatar, ativo este QR Code exclusivo do Administrador para que a banca possa
+abrir ou instalar o app agora mesmo no proprio celular, funcionando inclusive
+sem dados moveis."
+
+--------------------------------------------------------------------------------
+[01:00 - 02:00] 2. CRIACAO DO PROJETO E TEMA ESCURO (1 min)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+- No menu do Avatar, clique 1 vez em "Modo Escuro / Modo Claro" para mostrar o
+  tema.
+- Clique em "+ Novo Projeto", digite:
+  * Nome: Sistema ERP de Vendas e Estoque
+  * Descricao: Controle de pedidos, faturamento e baixa automatica de estoque.
+- Clique em "Salvar".
+
+O QUE FALAR:
+"Toda a navegacao e preferencias ficam concentradas no menu do Avatar para uma
+interface limpa. Vou criar do zero o projeto 'Sistema ERP de Vendas e Estoque'.
+Ele nasce com ID sequencial proprio do usuario e ainda sem tarefas ou riscos."
+
+--------------------------------------------------------------------------------
+[02:00 - 03:45] 3. CHAT AGENTICO COM IA + VALIDACAO DE ARTEFATOS (1 min 45s)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+1. Clique no Avatar -> "Assistente IA".
+2. Com o projeto selecionado no topo, cole (Ctrl+V) a frase e envie:
+   "Preciso desenvolver um sistema ERP de controle de pedidos, vendas e estoque. Crie automaticamente as tarefas com prazos no backlog e mapeie os possíveis riscos deste projeto."
+3. Mostre a resposta da IA e o selo verde no final confirmando a criacao
+   automatica no banco PostgreSQL.
+4. Clique rapidamente no botao lateral "RF/NF" para mostrar o modal de
+   auditoria de requisitos/arquivos e feche o modal.
+5. Clique no botao verde "Ver Tarefas e Riscos no Projeto".
+
+O QUE FALAR:
+"Aqui esta o coração da nossa integracao com a IA: em vez de apenas responder
+texto, o nosso agente decompoe o sistema em tarefas tecnicas com prazos e
+mapeia os riscos do dominio. O backend Java intercepta os blocos estruturados e
+grava tudo automaticamente no banco de dados.
+Pela barra lateral, o gestor tambem pode anexar arquivos ou requisitos (RF/RNF)
+para auditoria da IA. Clicando no botao verde, vamos direto ao projeto."
+
+--------------------------------------------------------------------------------
+[03:45 - 05:00] 4. KANBAN, EXECUCAO REAL E CAMINHO CRITICO CPM (1 min 15s)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+1. Clique na aba "Tarefas & Backlog".
+2. Na Tarefa #1, clique em "Concluir" (vai para Feito - 100%).
+3. Na Tarefa #2, clique em "Iniciar" (vai para Fazendo - 50%).
+4. Clique no botao "Grafo CPM / Dependencias".
+
+O QUE FALAR:
+"No quadro Kanban ja estao todas as tarefas que a IA criou. Ao concluir a
+primeira e iniciar a segunda, o sistema registra as datas reais de execucao e
+recalcula o progresso fisico e o SPI (Indice de Desempenho de Prazo) na hora.
+Alternando para 'Grafo CPM', o motor Java calcula o Caminho Critico: inicio
+mais cedo (ES), fim mais cedo (EF) e folga, destacando as tarefas criticas que
+nao podem atrasar."
+
+--------------------------------------------------------------------------------
+[05:00 - 06:00] 5. MATRIZ DE RISCOS E AUTO-RAG (1 min)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+1. Clique na aba "Matriz de Riscos" e mostre os riscos criados pela IA.
+2. Clique na aba "Base RAG (Licoes)" para mostrar as licoes aprendidas geradas
+   automaticamente.
+
+O QUE FALAR:
+"Na Matriz de Riscos, cada risco criado pela IA ja vem com probabilidade,
+impacto em dias e severidade calculada.
+E a cada tarefa concluida ou risco cadastrado, o nosso motor de Auto-RAG gera
+automaticamente uma Licao Aprendida na base de conhecimento, que e recuperada
+por similaridade lexica para evitar erros repetidos nos proximos projetos."
+
+--------------------------------------------------------------------------------
+[06:00 - 07:00] 6. MONTE CARLO (P50 / P80) E ANALISE PRESCRITIVA IA (1 min)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+1. Na aba "Dashboards & Previsoes", aponte para as datas P50 e P80.
+2. Clique no botao azul "Analise IA" no topo da tela.
+3. Mostre o Score de Saude e o diagnostico estruturado em 6 topicos.
+
+O QUE FALAR:
+"Com as tarefas e riscos, o sistema roda a Simulacao de Monte Carlo, projetando
+a data provavel P50 (meta interna) e a data segura P80 (com 80% de confianca e
+margem para os riscos).
+Clicando em 'Analise IA', o backend envia essas metricas exatas para o Gemini
+gerar o Relatorio Prescritivo Oficial em 6 topicos com Plano de Acao — sem
+alucinar nenhum numero."
+
+--------------------------------------------------------------------------------
+[07:00 - 07:30] 7. GOVERNANCA RBAC (PAINEL ADMIN) E ENCERRAMENTO (30 seg)
+--------------------------------------------------------------------------------
+O QUE FAZER NA TELA:
+1. Clique no Avatar -> "Painel Admin".
+2. Mostre rapidamente as abas de Usuarios (Admin/User), Projetos Globais e
+   Curadoria da Base RAG.
+
+O QUE FALAR:
+"Por fim, no Painel Admin com controle de acesso RBAC, o administrador gerencia
+usuarios, audita a saude de todos os projetos da empresa e faz a curadoria da
+Base RAG. Assim, o ProjectMind cobre todo o ciclo: da criacao agentica com IA
+ate a previsao matematica de riscos e governanca. Muito obrigado!"
+================================================================================

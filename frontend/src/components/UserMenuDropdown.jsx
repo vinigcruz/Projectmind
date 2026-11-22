@@ -125,20 +125,6 @@ export default function UserMenuDropdown() {
                 <span>Meus Projetos</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setAberto(false);
-                  navigate("/chat");
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-              >
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <span>Assistente IA</span>
-              </button>
-
               {isAdmin && (
                 <button
                   type="button"
