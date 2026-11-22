@@ -347,40 +347,73 @@ function ChatPage() {
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       {/* Header Responsivo (Desktop + Mobile iPhone) */}
-      <header className="bg-white border-b border-gray-200 py-3 px-3 sm:px-6 flex-shrink-0">
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
+      <header className="bg-white border-b border-gray-200 py-3 px-4 sm:px-6 flex-shrink-0">
+        {/* Linha 1: Logo à esquerda e Avatar fixo no canto direito (igual em todas as telas) */}
+        <div className="flex items-center justify-between gap-2">
           <div
             onClick={() => navigate("/projetos")}
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer group min-w-0"
             title="Ir para a página inicial (Meus Projetos)"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition shrink-0">
               <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">ProjectMind</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition truncate">
+              ProjectMind
+            </h1>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            {/* No PC (sm+), o seletor de projeto fica alinhado na barra superior */}
             <select
               value={selectedProjetoId}
               onChange={(e) => setSelectedProjetoId(e.target.value)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 focus:outline-none max-w-[150px] sm:max-w-xs truncate"
+              className="hidden sm:block bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none max-w-xs truncate"
             >
               <option value="">Selecione um Projeto</option>
               {projetos.map((p) => (
-                <option key={p.id} value={p.id}>{p.numeroProjeto ? `#${p.numeroProjeto} - ` : ""}{p.nome}</option>
+                <option key={p.id} value={p.id}>
+                  {p.numeroProjeto ? `#${p.numeroProjeto} - ` : ""}
+                  {p.nome}
+                </option>
               ))}
             </select>
             {selectedProjetoId && (
               <button
                 onClick={() => navigate(`/projetos/${selectedProjetoId}/analise`)}
-                className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap cursor-pointer"
+                className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-sm font-medium transition shadow-sm whitespace-nowrap cursor-pointer"
               >
                 Análise IA
               </button>
             )}
             <UserMenuDropdown />
           </div>
+        </div>
+
+        {/* Linha 2 (Exclusiva para Celular): Seletor de Projeto elegante ocupando a largura sem empurrar o Avatar */}
+        <div className="sm:hidden flex items-center gap-2 pt-2.5 mt-2.5 border-t border-gray-100">
+          <select
+            value={selectedProjetoId}
+            onChange={(e) => setSelectedProjetoId(e.target.value)}
+            className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none truncate"
+          >
+            <option value="">Selecione um Projeto</option>
+            {projetos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.numeroProjeto ? `#${p.numeroProjeto} - ` : ""}
+                {p.nome}
+              </option>
+            ))}
+          </select>
+          {selectedProjetoId && (
+            <button
+              type="button"
+              onClick={() => navigate(`/projetos/${selectedProjetoId}/analise`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition shadow-2xs whitespace-nowrap shrink-0"
+            >
+              Análise IA
+            </button>
+          )}
         </div>
 
         {/* Barra de categorias horizontal exclusiva para Celular / iPhone */}
