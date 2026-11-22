@@ -8,6 +8,9 @@ import "./index.css";
 
 if (localStorage.getItem("pm_theme") === "dark") {
   document.documentElement.classList.add("dark");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#0b0f19");
+} else {
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#ffffff");
 }
 
 // Detecta automaticamente Dynamic Island, Notch (iPhone 13 Pro, etc.) ou telas sem recorte (Android/SE/Desktop)

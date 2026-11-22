@@ -22,12 +22,15 @@ export default function ThemeToggle({ className = "" }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (dark) {
       root.classList.add("dark");
       localStorage.setItem("pm_theme", "dark");
+      metaTheme?.setAttribute("content", "#0b0f19");
     } else {
       root.classList.remove("dark");
       localStorage.setItem("pm_theme", "light");
+      metaTheme?.setAttribute("content", "#ffffff");
     }
   }, [dark]);
 
