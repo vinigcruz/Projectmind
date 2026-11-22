@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { listarProjetos, criarProjeto, atualizarProjeto, deletarProjeto } from "../services/projetoService.js";
 import { obterMetricasProjeto } from "../services/auditoriaService.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import ThemeToggle from "../components/ThemeToggle.jsx";
-import { Brain, LayoutDashboard, User, LogOut, Plus, Sparkles, Network, BookOpen, Pencil, Trash2, ShieldCheck } from "lucide-react";
+import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
+import { Brain, LayoutDashboard, Plus, Network, BookOpen, Pencil, Trash2 } from "lucide-react";
 
 function MeusProjetosPage() {
   const navigate = useNavigate();
@@ -130,47 +130,8 @@ function MeusProjetosPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
-              <ThemeToggle />
-              {isAdmin && (
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm flex items-center gap-2"
-                >
-                  <ShieldCheck className="h-4 w-4" /> Painel Admin
-                </button>
-              )}
-              <button
-                onClick={() => navigate("/chat")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm flex items-center gap-2"
-              >
-                <Sparkles className="h-4 w-4" /> Assistente IA
-              </button>
-              <div className="flex items-center gap-3 border-l pl-4 border-gray-200">
-                <div
-                  onClick={() => navigate("/perfil")}
-                  className="flex items-center gap-3 cursor-pointer group"
-                  title="Meu Perfil - Editar informações e excluir conta"
-                >
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition">{user?.nome || "Usuário"}</p>
-                    <p className="text-xs text-gray-500">{user?.email || "usuario@projectmind.com"}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-blue-600 group-hover:bg-blue-700 rounded-full flex items-center justify-center text-white font-semibold transition shadow-sm">
-                    <User className="h-5 w-5" />
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate("/login");
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition"
-                  title="Sair"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </div>
+            <div className="flex items-center">
+              <UserMenuDropdown />
             </div>
           </div>
         </div>
