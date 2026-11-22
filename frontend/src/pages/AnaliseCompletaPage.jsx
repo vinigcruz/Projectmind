@@ -60,32 +60,51 @@ function AnaliseCompletaPage() {
   }[cronograma?.situacaoPrazo] || "bg-gray-100 text-gray-800 border-gray-200";
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-10 pm-safe-page-top">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header Padronizado igual às demais telas (Logo à esquerda e Avatar fixo à direita) */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between gap-2.5">
+            <div
+              onClick={() => navigate("/projetos")}
+              className="flex items-center gap-2.5 cursor-pointer group"
+              title="Ir para Meus Projetos"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+                <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">
+                ProjectMind
+              </h1>
+            </div>
+
+            <div className="flex items-center">
+              <UserMenuDropdown />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-10 py-8">
         <button
           onClick={() => navigate(`/projetos/${id}`)}
-          className="text-sm font-medium text-gray-500 hover:text-gray-900 mb-6 flex items-center gap-1 transition"
+          className="text-sm font-medium text-gray-500 hover:text-gray-900 mb-6 flex items-center gap-1.5 transition cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar para o projeto
         </button>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">Análise Completa do Projeto</h1>
-              {cronograma?.situacaoPrazo && (
-                <span className={`text-xs px-3 py-1 rounded-full font-bold border ${situacaoBadge}`}>
-                  {cronograma.situacaoPrazo}
-                </span>
-              )}
-            </div>
-            <p className="text-gray-500 mt-1">
-              Diagnóstico de {projeto?.nome || `Projeto #${projeto?.numeroProjeto || id}`} combinando Grafos (CPM), Earned Schedule, Monte Carlo e IA Gemini.
-            </p>
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Análise Completa do Projeto</h2>
+            {cronograma?.situacaoPrazo && (
+              <span className={`text-xs px-3 py-1 rounded-full font-bold border ${situacaoBadge}`}>
+                {cronograma.situacaoPrazo}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3">
-            <UserMenuDropdown />
-          </div>
+          <p className="text-gray-500 text-sm sm:text-base mt-1">
+            Diagnóstico de {projeto?.nome || `Projeto #${projeto?.numeroProjeto || id}`} combinando Grafos (CPM), Earned Schedule, Monte Carlo e IA Gemini.
+          </p>
         </div>
 
         {erro ? (
@@ -247,7 +266,7 @@ function AnaliseCompletaPage() {
             </section>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

@@ -371,45 +371,6 @@ function MeusProjetosPage() {
             })}
           </div>
         )}
-
-        {/* Cards Informativos Inferiores do Protótipo */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                <Brain className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="font-bold text-gray-900">IA Preditiva</h3>
-            </div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Análise em tempo real usando machine learning para prever riscos e sugerir otimizações.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                <Network className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="font-bold text-gray-900">Análise de Grafos</h3>
-            </div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Algoritmos avançados (CPM) para identificar caminho crítico e dependências complexas.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-emerald-600" />
-              </div>
-              <h3 className="font-bold text-gray-900">RAG Knowledge Base</h3>
-            </div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Sistema de busca vetorial que encontra lições aprendidas relevantes de projetos passados.
-            </p>
-          </div>
-        </div>
       </main>
     </div>
   );
