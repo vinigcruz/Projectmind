@@ -95,7 +95,7 @@ public class AdminController {
         return ResponseEntity.ok(resumo);
     }
 
-    // GET /api/admin/usuarios - Lista todos os usuários com contagem de projetos e tarefas
+    // GET /api/admin/usuarios - Lista todos os usuários com contagem de projetos, tarefas e status de bloqueio
     @GetMapping("/usuarios")
     public ResponseEntity<?> listarUsuarios(
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
@@ -122,12 +122,35 @@ public class AdminController {
             item.put("role", u.getRole());
             item.put("isAdmin", u.isAdmin());
             item.put("isMasterAdmin", "admin@projectmind.com".equalsIgnoreCase(u.getEmail()));
+            item.put("tentativasFalhas", u.getTentativasFalhas());
+            item.put("bloqueado", u.isBloqueado());
+            item.put("bloqueadoAte", u.getBloqueadoAte());
             item.put("totalProjetos", projetosDoUsuario.size());
             item.put("totalTarefas", totalTarefas);
             resultado.add(item);
         }
 
         return ResponseEntity.ok(resultado);
+    }
+
+    // PUT /api/admin/usuarios/{id}/desbloquear - Desbloqueia imediatamente um usuário bloqueado por tentativas de login
+    @PutMapping("/usuarios/{id}/desbloquear")
+    public ResponseEntity<?> desbloquearUsuario(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (obterAdminAutenticado(headerUserId, authHeader) == null) return acessoNegado();
+
+        Usuario alvo = usuarioRepository.findById(id).orElse(null);
+        if (alvo == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("erro", "Usuário não encontrado."));
+        }
+
+        alvo.setTentativasFalhas(0);
+        alvo.setBloqueadoAte(null);
+        usuarioRepository.save(alvo);
+
+        return ResponseEntity.ok(Map.of("message", "Conta de " + alvo.getNome() + " desbloqueada com sucesso!"));
     }
 
     // PUT /api/admin/usuarios/{id}/role - Promove para ADMIN ou rebaixa para USER
@@ -295,4 +318,3 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("erro", "Lição não encontrada."));
     }
 }
-

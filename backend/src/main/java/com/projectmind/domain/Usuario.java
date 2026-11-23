@@ -1,6 +1,7 @@
 package com.projectmind.domain;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -23,6 +24,12 @@ public class Usuario {
 
     @Column(length = 20)
     private String role; // "ADMIN" ou "USER"
+
+    @Column(name = "tentativas_falhas")
+    private Integer tentativasFalhas = 0;
+
+    @Column(name = "bloqueado_ate")
+    private LocalDateTime bloqueadoAte;
 
     @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -61,6 +68,21 @@ public class Usuario {
     public boolean isAdmin() {
         if ("ADMIN".equalsIgnoreCase(this.role)) return true;
         return this.email != null && this.email.trim().equalsIgnoreCase("admin@projectmind.com");
+    }
+
+    public Integer getTentativasFalhas() {
+        return tentativasFalhas != null ? tentativasFalhas : 0;
+    }
+
+    public void setTentativasFalhas(Integer tentativasFalhas) {
+        this.tentativasFalhas = tentativasFalhas;
+    }
+
+    public LocalDateTime getBloqueadoAte() { return bloqueadoAte; }
+    public void setBloqueadoAte(LocalDateTime bloqueadoAte) { this.bloqueadoAte = bloqueadoAte; }
+
+    public boolean isBloqueado() {
+        return bloqueadoAte != null && LocalDateTime.now().isBefore(bloqueadoAte);
     }
 
     public List<Projeto> getProjetos() { return projetos; }

@@ -15,6 +15,11 @@ export async function alterarRoleUsuarioAdmin(id, role) {
   return data;
 }
 
+export async function desbloquearUsuarioAdmin(id) {
+  const { data } = await api.put(`/api/admin/usuarios/${id}/desbloquear`);
+  return data;
+}
+
 export async function excluirUsuarioAdmin(id) {
   const { data } = await api.delete(`/api/admin/usuarios/${id}`);
   return data;
@@ -44,4 +49,3 @@ export async function excluirLicaoAdmin(licaoId) {
   const { data } = await api.delete(`/api/admin/licoes/${licaoId}`);
   return data;
 }
-

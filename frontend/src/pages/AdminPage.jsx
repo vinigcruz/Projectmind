@@ -5,7 +5,7 @@ import UserMenuDropdown from "../components/UserMenuDropdown.jsx";
 import {
   obterResumoAdmin,
   listarUsuariosAdmin,
-  alterarRoleUsuarioAdmin,
+  alterarRoleUsuarioAdmin, desbloquearUsuarioAdmin,
   excluirUsuarioAdmin,
   listarProjetosAdmin,
   excluirProjetoAdmin,
@@ -88,6 +88,7 @@ export default function AdminPage() {
     carregarDadosAdmin(false);
   }, []);
 
+  const handleDesbloquearUsuario = async (alvo) => { try { await desbloquearUsuarioAdmin(alvo.id); mostrarMensagemTemporaria(`Conta de "${alvo.nome}" desbloqueada com sucesso!`); carregarDadosAdmin(true); } catch (err) { alert(err.response?.data?.erro || "Erro ao desbloquear conta."); } };
   const mostrarMensagemTemporaria = (msg) => {
     setFeedback(msg);
     setTimeout(() => setFeedback(""), 3500);
@@ -399,6 +400,8 @@ export default function AdminPage() {
                                 <td className="py-3.5 px-4">
                                   <div className="font-bold text-gray-900 flex items-center gap-2">
                                     {u.nome}
+                                    {u.bloqueado && <span className="text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded-full">BLOQUEADO (15m)</span>}
+                                    {!u.bloqueado && u.tentativasFalhas > 0 && <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">{u.tentativasFalhas}/5 falhas</span>}
                                     {isSelf && (
                                       <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
                                         Você
@@ -424,6 +427,9 @@ export default function AdminPage() {
                                 <td className="py-3.5 px-4 text-center text-gray-600">{u.totalTarefas}</td>
                                 <td className="py-3.5 px-4">
                                   <div className="flex items-center justify-end gap-2">
+                                    {(u.bloqueado || u.tentativasFalhas > 0) && (
+                                      <button type="button" onClick={() => handleDesbloquearUsuario(u)} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition border bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200" title="Zerar tentativas e desbloquear login imediatamente">Desbloquear</button>
+                                    )}
                                     <button
                                       type="button"
                                       disabled={bloqueadoRebaixar && u.isAdmin}
