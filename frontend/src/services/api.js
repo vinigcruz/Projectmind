@@ -217,14 +217,34 @@ function calcularMetricasOffline(projeto) {
   };
 }
 
+function obterUsuarioIdAtual(config) {
+  if (config?.params?.usuarioId) return String(config.params.usuarioId);
+  const url = config?.url || "";
+  const m = url.match(/[?&]usuarioId=([^&]+)/);
+  if (m && m[1]) return String(m[1]);
+  const headerUid = config?.headers?.["X-User-Id"] || config?.headers?.["x-user-id"];
+  if (headerUid) return String(headerUid);
+  try {
+    const u = JSON.parse(sessionStorage.getItem("pm_user") || localStorage.getItem("pm_user") || "null");
+    if (u && (u.id || u.userId)) return String(u.id || u.userId);
+  } catch {}
+  return "anon";
+}
+
 function sincronizarRespostaNoCache(config, data) {
   if (!config || !data) return;
   const url = config.url || "";
   const metodo = (config.method || "get").toLowerCase();
   const db = carregarDbOffline();
+  const uid = obterUsuarioIdAtual(config);
 
   if (url.includes("/api/usuarios/login") || url.includes("/api/usuarios/cadastro")) {
     if (data && (data.id || data.email)) {
+      const novoUid = String(data.id || data.userId || "");
+      // Se for um cadastro novo, garante que a lista de projetos desse novo ID comece 100% zerada no cache local
+      if (url.includes("/api/usuarios/cadastro") && novoUid) {
+        db.projetos = (db.projetos || []).filter((p) => String(p.usuarioId) !== novoUid);
+      }
       const idx = db.usuarios.findIndex((u) => u.email === data.email);
       if (idx >= 0) db.usuarios[idx] = { ...db.usuarios[idx], ...data };
       else db.usuarios.push(data);
@@ -235,7 +255,9 @@ function sincronizarRespostaNoCache(config, data) {
 
   if (metodo === "get" && url.match(/\/api\/projetos(\?|$)/)) {
     if (Array.isArray(data)) {
-      db.projetos = data;
+      const outrosUsuarios = (db.projetos || []).filter((p) => String(p.usuarioId) !== String(uid));
+      const doUsuarioAtual = data.map((p) => ({ ...p, usuarioId: String(uid) }));
+      db.projetos = [...outrosUsuarios, ...doUsuarioAtual];
       salvarDbOffline(db);
     }
     return;
@@ -243,9 +265,10 @@ function sincronizarRespostaNoCache(config, data) {
 
   const matchProj = url.match(/\/api\/projetos\/(\d+)$/);
   if (metodo === "get" && matchProj && data && data.id) {
+    const projComDono = { ...data, usuarioId: data.usuarioId || String(uid) };
     const idx = db.projetos.findIndex((p) => String(p.id) === String(data.id));
-    if (idx >= 0) db.projetos[idx] = data;
-    else db.projetos.push(data);
+    if (idx >= 0) db.projetos[idx] = projComDono;
+    else db.projetos.push(projComDono);
     salvarDbOffline(db);
     return;
   }
@@ -278,23 +301,32 @@ function atenderRequisicaoOffline(config) {
   // 2. Login, Cadastro e Atualização de Perfil Offline
   if (url.includes("/api/usuarios/login") || url.includes("/api/usuarios/cadastro")) {
     const email = (body.email || "admin@projectmind.com").trim().toLowerCase();
+    const isCadastro = url.includes("cadastro");
     const existente = db.usuarios.find((u) => (u.email || "").toLowerCase() === email);
-    const isAdmin = email === "admin@projectmind.com" || existente?.isAdmin === true;
-    const userObj = existente || {
-      id: isAdmin ? 1 : Date.now(),
-      userId: isAdmin ? 1 : Date.now(),
+    const isAdmin = email === "admin@projectmind.com" || (!isCadastro && existente?.isAdmin === true);
+    const newId = isCadastro ? Date.now() : existente?.id || (isAdmin ? 1 : Date.now());
+    const userObj = (!isCadastro && existente) ? existente : {
+      id: newId,
+      userId: newId,
       nome: body.nome || (isAdmin ? "Administrador" : email.split("@")[0]),
       email,
       role: isAdmin ? "ADMIN" : "USER",
       isAdmin,
-      token: `pm-token-${isAdmin ? 1 : 999}`,
+      token: `pm-token-${newId}`,
       message: "Autenticado em Modo Offline Local",
     };
-    if (!existente) {
+    if (isCadastro) {
+      // Usuário recém-cadastrado (mesmo offline) sempre nasce com 0 projetos
+      db.projetos = (db.projetos || []).filter((p) => String(p.usuarioId) !== String(newId));
+      const idx = db.usuarios.findIndex((u) => (u.email || "").toLowerCase() === email);
+      if (idx >= 0) db.usuarios[idx] = userObj;
+      else db.usuarios.push(userObj);
+      salvarDbOffline(db);
+    } else if (!existente) {
       db.usuarios.push(userObj);
       salvarDbOffline(db);
     }
-    return { status: url.includes("cadastro") ? 201 : 200, data: userObj };
+    return { status: isCadastro ? 201 : 200, data: userObj };
   }
 
   const matchUsuarioId = url.match(/\/api\/usuarios\/(\d+)$/);
@@ -320,72 +352,29 @@ function atenderRequisicaoOffline(config) {
     }
   }
 
-  // 3. Listar Projetos (GET /api/projetos)
+  const uidAtual = obterUsuarioIdAtual(config);
+
+  // 3. Listar Projetos do Usuário Logado (GET /api/projetos) — Isolado por usuarioId (usuário novo vem 100% zerado)
   if (metodo === "get" && url.match(/\/api\/projetos(\?|$)/)) {
-    if (db.projetos.length === 0) {
-      const projetoInicial = {
-        id: 1,
-        numeroProjeto: 1,
-        nome: "Sistema ERP de Vendas e Estoque",
-        descricao: "Plataforma inteligente sincronizada no dispositivo para operação offline e online.",
-        dataInicio: formatarDataBr(new Date()),
-        tarefas: [
-          {
-            id: 101,
-            ordemSequencial: 1,
-            descricao: "Levantamento de Requisitos e Modelagem do Banco",
-            duracaoDias: 4,
-            status: "Feito",
-            percentualConcluido: 100,
-            tipoDependencia: "TI",
-            dataInicioReal: formatarDataBr(new Date()),
-            dataConclusaoReal: formatarDataBr(new Date()),
-            idsPredecessoras: [],
-          },
-          {
-            id: 102,
-            ordemSequencial: 2,
-            descricao: "Desenvolvimento da API REST e Regras de Estoque",
-            duracaoDias: 6,
-            status: "Fazendo",
-            percentualConcluido: 50,
-            tipoDependencia: "TI",
-            dataInicioReal: formatarDataBr(new Date()),
-            idsPredecessoras: [101],
-          },
-          {
-            id: 103,
-            ordemSequencial: 3,
-            descricao: "Integração de Pagamentos e Homologação Final",
-            duracaoDias: 5,
-            status: "A Fazer",
-            percentualConcluido: 0,
-            tipoDependencia: "TI",
-            idsPredecessoras: [102],
-          },
-        ],
-        riscos: [
-          {
-            id: 201,
-            numeroRisco: 1,
-            descricao: "Concorrência na baixa de estoque em picos de vendas",
-            probabilidade: 0.45,
-            impacto: 4,
-            nivelSeveridade: "Alto",
-          },
-        ],
-      };
-      db.projetos.push(projetoInicial);
-      salvarDbOffline(db);
-    }
-    return { status: 200, data: db.projetos };
+    const projetosDoUsuario = (db.projetos || []).filter(
+      (p) => String(p.usuarioId) === String(uidAtual)
+    );
+    projetosDoUsuario.forEach((p, idx) => {
+      p.numeroProjeto = idx + 1;
+    });
+    return { status: 200, data: projetosDoUsuario };
   }
 
-  // 4. Criar Projeto (POST /api/projetos)
+  // 4. Criar Projeto (POST /api/projetos) — Vinculado ao usuarioId atual com numeração começando em #1
   if (metodo === "post" && url.match(/\/api\/projetos$/)) {
+    const donoId = String(body.usuarioId || uidAtual);
+    const projetosDoUsuario = (db.projetos || []).filter(
+      (p) => String(p.usuarioId) === donoId
+    );
     const novo = {
       id: Date.now(),
-      numeroProjeto: db.projetos.length + 1,
+      usuarioId: donoId,
+      numeroProjeto: projetosDoUsuario.length + 1,
       nome: body.nome || "Novo Projeto",
       descricao: body.descricao || "",
       dataInicio: formatarDataBr(new Date()),
@@ -412,9 +401,14 @@ function atenderRequisicaoOffline(config) {
       return { status: 200, data: db.projetos[idx] };
     }
     if (metodo === "delete") {
+      const alvo = db.projetos.find((p) => String(p.id) === String(pid));
+      const donoAlvo = alvo?.usuarioId || String(uidAtual);
       db.projetos = db.projetos.filter((p) => String(p.id) !== String(pid));
-      db.projetos.forEach((p, idx) => {
-        p.numeroProjeto = idx + 1;
+      let num = 1;
+      db.projetos.forEach((p) => {
+        if (String(p.usuarioId) === String(donoAlvo)) {
+          p.numeroProjeto = num++;
+        }
       });
       salvarDbOffline(db);
       return { status: 200, data: { message: "Projeto excluído offline" } };
